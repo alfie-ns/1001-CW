@@ -58,6 +58,8 @@ int main() {
 
     initialize(); // initialize the arrays
 
+    printf("\n-----------------NON-OPTIMISED------------------------------\n");
+
     printf("\nRoutine1:");
     start_time = omp_get_wtime(); //start timer
 
@@ -76,7 +78,7 @@ int main() {
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
 
-    printf("\n-----------------------------------------------\n");
+    printf("\n-----------------VECTORISED------------------------------\n");
 
     printf("\nRoutine1_vec:");
     start_time = omp_get_wtime(); //start timer

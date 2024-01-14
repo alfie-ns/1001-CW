@@ -28,11 +28,13 @@
 
 //function declaration
 void initialize(); // init function intializes the arrays
+
 void routine1(float alpha, float beta); // calls routine1 with alpha and beta
 void routine2(float alpha, float beta); // calls routine2 with alpha and beta
 
 void routine1_vec(float alpha, float beta); // calls routine1_vec with alpha and beta
 void routine2_vec(float alpha, float beta); // calls routine2_vec with alpha and beta
+
 /*
     Routine1: y[i] = alpha * y[i] + beta * z[i];
     Routine2: w[i] = w[i] - beta + alpha * A[i][j] * x[j];
@@ -120,13 +122,13 @@ void initialize() {
 
 
 
-void routine1(float alpha, float beta) {
+void routine1(float alpha, float beta) { // routine1: y[i] = alpha * y[i] + beta * z[i];
 
-    unsigned int i;
+    unsigned int i; // loop counter
 
 
     for (i = 0; i < M; i++)
-        y[i] = alpha * y[i] + beta * z[i];
+        y[i] = alpha * y[i] + beta * z[i]; // for each i of the array, i = (alpha * y[i]) + (beta * z[i])
 
 }
 
@@ -135,31 +137,41 @@ void routine1_vec(float alpha, float beta) {
     unsigned int i; // loop counter
 
     // Create AVX vectors for alpha and beta
-    __m256 alpha_vec = _mm256_set1_ps(alpha); // set1_ps sets all 8 elements of the alpha_vec to the same value
-    __m256 beta_vec = _mm256_set1_ps(beta); // set1_ps sets all 8 elements of the beta_vec to the same value
+    __m256 alpha_vec = _mm256_set1_ps(alpha); // set1_ps sets all elements of alpha to alpha_vec, which holds 8 elements
+    __m256 beta_vec = _mm256_set1_ps(beta); // set1_ps sets all elements of beta to beta_vec, which holds 8 elements
 
-    // Process 8 elements at a time
+    // process 8 elements at a time for each iteration, until i reaches M
     for (i = 0; i < M; i += 8) {
-        // Load 8 elements from y and z into AVX registers
-        __m256 y_vec = _mm256_load_ps(&y[i]);
-        __m256 z_vec = _mm256_load_ps(&z[i]);
+
+        // & means the address of the variable, so &y[i] means the address of the y[i] variable
+        __m256 y_vec = _mm256_load_ps(&y[i]); // load 8 seperate iterated elements from y into AVX register 
+        __m256 z_vec = _mm256_load_ps(&z[i]); // load 8 seperate iterated elements from z into AVX register
 
         // Perform the vectorized operations
         __m256 result_vec = _mm256_add_ps(_mm256_mul_ps(alpha_vec, y_vec),
             _mm256_mul_ps(beta_vec, z_vec));
+            // result_vec = alpha * y_vec + beta * z_vec
 
         // Store the results back into the y array
         _mm256_store_ps(&y[i], result_vec);
     }
 
-    // Handle any remaining elements
-    for (; i < M; i++) {
-        y[i] = alpha * y[i] + beta * z[i];
-    }
+    // IS THIS NECCESSARY? [ ]
+
+    //// Handle any remaining elements
+    //for (; i < M; i++) {
+    //    y[i] = alpha * y[i] + beta * z[i];
+    //}
 }
 
 
+/*
 
+    Routine2: Updates each iterated element of the array w[i]
+    by overlapping i and j, and for each one, first subtracting beta and adding the product of alpha
+    times matrix-vector product of row i and j for A,  finally times by x[j]
+
+*/
 
 void routine2(float alpha, float beta) {
 
@@ -168,8 +180,7 @@ void routine2(float alpha, float beta) {
 
     for (i = 0; i < N; i++)
         for (j = 0; j < N; j++)
-            w[i] = w[i] - beta + alpha * A[i][j] * x[j];
-
+            w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
 
 }
 

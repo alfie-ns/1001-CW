@@ -44,7 +44,8 @@ void routine2_vec(float alpha, float beta); // calls routine2_vec with alpha and
     M is the size of the arrays for routine1
     N is the size of the arrays for routine2
 
-    TODO: Make routine2_vec 
+    [ ] TODO: Make routine2_vec 
+    [ ] TODO: TEST IF VECTORISED CALCULATIONS = NON-OPTIMISED VERSION [ ]
 */
 
 __declspec(align(64)) float  y[M], z[M]; // declare arrays as 64-byte aligned
@@ -139,7 +140,13 @@ void routine1_vec(float alpha, float beta) {
 
     // Create AVX vectors for alpha and beta
     __m256 alpha_vec = _mm256_set1_ps(alpha); // set1_ps sets all elements of alpha to alpha_vec, which holds 8 elements
+    // essentially there's 8 seperate float alpha = 0.023f; iterations
+    // alpha_vec = |0.023f|0.023f|0.023f|0.023f|0.023f|0.023f|0.023f|0.023f|
+
+
     __m256 beta_vec = _mm256_set1_ps(beta); // set1_ps sets all elements of beta to beta_vec, which holds 8 elements
+    // essentially there's 8 seperate float beta = 0.045f; iterations
+    // beta_vec = |0.045|0.045|0.045|0.045|0.045|0.045|0.045|0.045|
 
     // process 8 elements at a time for each iteration, until i reaches M
     for (i = 0; i < M; i += 8) {
@@ -179,15 +186,81 @@ void routine2(float alpha, float beta) {
     unsigned int i, j;
 
 
-    for (i = 0; i < N; i++)
+    for (i = 0; i < N; i++) // 2d array iteration
+        for (j = 0; j < N; j++)
+            w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
+            /* 
+                w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
+                w's iteration = (w's iteration - beta) +
+                (alpha times higher loop iteration of A as
+                well as 'j', finally times x's j iterations 
+            */
+} // [ ] TODO: Make routine2_vec
+
+/*
+    
+     256-bit register is divided into eight 32-bit slots.
+     Each slot can hold one single-precision floating-point number (float).
+     So process eight float values in parallel.
+
+*/
+
+void routine2_vec(float alpha, float beta) {
+
+    unsigned int i, j;
+
+    __m256 alpha_vec = _mm256_set1_ps(alpha);
+    // essentially there's 8 32-bit seperate float alpha = 0.023f; iterated elements
+    __m256 beta_vec = _mm256_set1_ps(beta);
+    // essentially there's 8 32-bit seperate float beta = 0.045f; iterated elements
+ 
+
+    /* 
+        __m256: means a 256 - bit variable that can hold eight 32 - bit single - precision floating - point values.
+        __mm256_set1_ps: initializes all elements of this 256-bit vector with the same single-precision floating-point value.
+    */
+    for (i = 0; i < N; i+=8) { // iterate over with 8 seperate elements at a time
+        __m256 w_vec = _mm256_load_ps(&w[i]); // load 8 seperate iterated elements from w into AVX register
+
+		__m256 sum_vec = _mm256_setzero_ps(); // initialize a vector to accumulate 8 results at a time
+
+        // setzero_ps() sets all 8 elements of the sum_vec to zero  WHY??????
+
+		for (j = 0; j < N; j++) { // iterate over with 8 seperate elements at a time
+        			__m256 a_vec = _mm256_load_ps(&A[i][j]); // load 8 seperate iterated elements from A[i][j] into AVX register
+        			__m256 x_vec = _mm256_set1_ps(x[j]); // set1_ps sets all elements of x to x_vec, which holds 8 elements
+        
+        			sum_vec = _mm256_add_ps(sum_vec, _mm256_mul_ps(alpha_vec, _mm256_mul_ps(a_vec, x_vec))); // perform the vectorized operation for the matrix-vector multiplication
+        		}
+
+		w_vec = _mm256_sub_ps(w_vec, beta_vec); // subtract beta and add to the initial value of w[i]
+		w_vec = _mm256_add_ps(w_vec, sum_vec);
+
+		_mm256_store_ps(&w[i], w_vec); // store the results back into the w array   
+
+    }
+}
+
+
+
+
+
+    /*
+    
+        for (i = 0; i < N; i++) // 2d array iteration
         for (j = 0; j < N; j++)
             w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
 
-} // [ ] TODO: Make routine2_vec
 
 
 
+                w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
+                w's iteration = (w's iteration - beta) +
+                (alpha times higher loop iteration of A as
+                well as 'j', finally times x's j iterations 
+    */
 
+    
 
 
 

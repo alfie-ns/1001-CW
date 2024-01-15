@@ -36,13 +36,15 @@ void routine1_vec(float alpha, float beta); // calls routine1_vec with alpha and
 void routine2_vec(float alpha, float beta); // calls routine2_vec with alpha and beta
 
 /*
-    Routine1: y[i] = alpha * y[i] + beta * z[i];
-    Routine2: w[i] = w[i] - beta + alpha * A[i][j] * x[j];
+    Routine1: y[i] = (alpha * y[i]) + (beta * z[i]);
+    Routine2: w[i] = w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
 
     declspec(align(64)) is used to align the arrays to 64-byte boundaries
 
     M is the size of the arrays for routine1
     N is the size of the arrays for routine2
+
+    TODO: Make routine2_vec 
 */
 
 __declspec(align(64)) float  y[M], z[M]; // declare arrays as 64-byte aligned
@@ -58,7 +60,7 @@ int main() {
 
     unsigned int t; // unsigned int-type variable to store the number of times the routines are executed    
 
-    initialize(); // initialize the arrays
+    initialize(); // initialise the arrays
 
     printf("\n-----------------NON-OPTIMISED------------------------------\n");
 
@@ -71,6 +73,8 @@ int main() {
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
 
+    initialize(); // reinitialise the arrays 
+
     printf("\nRoutine2:");
     start_time = omp_get_wtime(); //start timer
 
@@ -79,6 +83,8 @@ int main() {
 
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
+
+    initialize(); // reinitialise arrays 
 
     printf("\n-----------------VECTORISED------------------------------\n");
 
@@ -119,18 +125,13 @@ void initialize() {
 
 }
 
-
-
-
 void routine1(float alpha, float beta) { // routine1: y[i] = alpha * y[i] + beta * z[i];
 
     unsigned int i; // loop counter
 
-
     for (i = 0; i < M; i++)
-        y[i] = alpha * y[i] + beta * z[i]; // for each i of the array, i = (alpha * y[i]) + (beta * z[i])
-
-}
+        y[i] = alpha * y[i] + beta * z[i]; // for each iteration of the array, i = (alpha * y[i]) + (beta * z[i])
+}   
 
 void routine1_vec(float alpha, float beta) {
 
@@ -182,76 +183,7 @@ void routine2(float alpha, float beta) {
         for (j = 0; j < N; j++)
             w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
 
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+} // [ ] TODO: Make routine2_vec
 
 
 

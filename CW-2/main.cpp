@@ -25,6 +25,8 @@
 #define ARITHMETIC_OPERATIONS2 4*N*N // number of arithmetic operations in routine2
 #define TIMES2 1 // number of times routine2 is executed
 
+#define EPSILON 1e-6 // Tolerance for floating-point comparison
+
 
 //function declaration
 void initialize(); // init function intializes the arrays
@@ -35,6 +37,9 @@ void routine2(float alpha, float beta); // calls routine2 with alpha and beta
 void routine1_vec(float alpha, float beta); // calls routine1_vec with alpha and beta
 void routine2_vec(float alpha, float beta); // calls routine2_vec with alpha and beta
 
+unsigned short int equal(float a, float b); // function to check equality within tolerance
+unsigned short int compare_arrays(float* arr1, float* arr2, unsigned int size); // function to compare two arrays
+
 /*
     Routine1: y[i] = (alpha * y[i]) + (beta * z[i]);
     Routine2: w[i] = w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
@@ -44,12 +49,14 @@ void routine2_vec(float alpha, float beta); // calls routine2_vec with alpha and
     M is the size of the arrays for routine1
     N is the size of the arrays for routine2
 
-    [ ] TODO: Make routine2_vec 
-    [ ] TODO: TEST IF VECTORISED CALCULATIONS = NON-OPTIMISED VERSION [ ]
+    [x] TODO: Make routine2_vec 
+    [x] TODO: TEST IF VECTORISED CALCULATIONS = NON-OPTIMISED VERSION WITH COMPARE FUNCTION
+    [ ] RESULTS DO NOT MATCH
 */
 
 __declspec(align(64)) float  y[M], z[M]; // declare arrays as 64-byte aligned
 __declspec(align(64)) float A[N][N], x[N], w[N]; // declare arrays as 64-byte aligned
+__declspec(align(64)) float y_copy[M], w_copy[N]; // Copies of y and w arrays
 
 int main() {
 
@@ -89,6 +96,10 @@ int main() {
 
     printf("\n-----------------VECTORISED------------------------------\n");
 
+    // make copies before running vectorised versions
+    memcpy(y_copy, y, M * sizeof(float));
+    memcpy(w_copy, w, N * sizeof(float));
+
     printf("\nRoutine1_vec:");
     start_time = omp_get_wtime(); //start timer
 
@@ -109,7 +120,26 @@ int main() {
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
 
-    printf("\n-----------------COMPARISON------------------------------\n");
+    printf("\n-----------------TESTING------------------------------\n\n");
+    // Run and compare routine1_vec
+    memcpy(y, y_copy, M * sizeof(float)); // Restore y from y_copy
+    routine1_vec(alpha, beta);
+    if (compare_arrays(y, y_copy, M)) {
+        printf("Routine1_vec: Results match.\n");
+    }
+    else {
+        printf("Routine1_vec: Results do not match!\n");
+    }
+
+    // Run and compare routine2_vec
+    memcpy(w, w_copy, N * sizeof(float)); // Restore w from w_copy
+    routine2_vec(alpha, beta);
+    if (compare_arrays(w, w_copy, N)) {
+        printf("Routine2_vec: Results match.\n");
+    }
+    else {
+        printf("Routine2_vec: Results do not match!\n");
+    }
 
     return 0; // return 0 to indicate that program has finished successfully
 }
@@ -332,9 +362,20 @@ void routine2_vec(float alpha, float beta) {
 
     
 
-
-
-
+// Function to check equality within tolerance
+unsigned short int equal(float a, float b) {
+    float temp = a - b;
+    return (fabs(temp) / fabs(b + EPSILON)) < EPSILON;
+}
+// Function to compare two arrays
+unsigned short int compare_arrays(float* arr1, float* arr2, unsigned int size) {
+    for (unsigned int i = 0; i < size; i++) {
+        if (!equal(arr1[i], arr2[i])) {
+            return 0; // Mismatch found
+        }
+    }
+    return 1; // No mismatches
+    }
 
 
 

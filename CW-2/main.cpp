@@ -315,6 +315,12 @@ void routine2_vec(float alpha, float beta) {
           for (i = 0; i < N; i++)
             for (j = 0; j < N; j++)
                 w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
+
+            replicates the value of the alpha variable and fills 
+            all eight 32-bit slots within alpha_vec. Each slot is 
+            a different location within the register, and all slots
+            will contain the exact same value, allowing for parallel 
+            computation  
         */
     
     for (i = 0; i < N; i++) { // Note: Not processing 8 w[i] values at a time here

@@ -25,7 +25,7 @@
 #define ARITHMETIC_OPERATIONS2 4*N*N // number of arithmetic operations in routine2
 #define TIMES2 1 // number of times routine2 is executed
 
-#define EPSILON 1e-6 // Tolerance for floating-point comparison
+#define EPSILON 1e-6 // Tolerance for floating-point comparison ???
 
 
 //function declaration
@@ -51,7 +51,7 @@ unsigned short int compare_arrays(float* arr1, float* arr2, unsigned int size); 
 
     [x] TODO: Make routine2_vec 
     [x] TODO: TEST IF VECTORISED CALCULATIONS = NON-OPTIMISED VERSION WITH COMPARE FUNCTION
-    [ ] RESULTS DO NOT MATCH
+    [ ] RESULTS DO NOT MATCH. I'm pretty sure it's the compate function because routine1 must be the same
 */
 
 __declspec(align(64)) float  y[M], z[M]; // declare arrays as 64-byte aligned
@@ -185,7 +185,7 @@ void routine1_vec(float alpha, float beta) {
 
     // Create AVX vectors for alpha and beta
     __m256 alpha_vec = _mm256_set1_ps(alpha); // set1_ps sets all elements of alpha to alpha_vec, which holds 8 elements
-    // essentially there's 8 seperate float alpha = 0.023f; iterations
+
     // alpha_vec = |0.023f|0.023f|0.023f|0.023f|0.023f|0.023f|0.023f|0.023f|
 
 
@@ -203,7 +203,7 @@ void routine1_vec(float alpha, float beta) {
         // Perform the vectorized operations
         __m256 result_vec = _mm256_add_ps(_mm256_mul_ps(alpha_vec, y_vec),
             _mm256_mul_ps(beta_vec, z_vec));
-            // result_vec = alpha * y_vec + beta * z_vec
+            // result_vec = (alpha * y_vec) + (beta * z_vec)
 
         // Store the results back into the y array
         _mm256_store_ps(&y[i], result_vec);

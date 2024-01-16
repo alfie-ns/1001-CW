@@ -267,7 +267,7 @@ void routine2(float alpha, float beta) {
     unsigned int i, j;
 
 
-    for (i = 0; i < N; i++) // 2d array iteration
+    for (i = 0; i < N; i++) // 2d array iteration?
         for (j = 0; j < N; j++)
             w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
             /* 

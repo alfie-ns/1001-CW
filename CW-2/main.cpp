@@ -51,12 +51,15 @@ unsigned short int compare_arrays(float* arr1, float* arr2, unsigned int size); 
 
     [x] TODO: Make routine2_vec 
     [x] TODO: TEST IF VECTORISED CALCULATIONS = NON-OPTIMISED VERSION WITH COMPARE FUNCTION
-    [ ] RESULTS DO NOT MATCH. I'm pretty sure it's the compate function because routine1 must be the same
+    [ ] RESULTS DO NOT MATCH. it must be the compare function because routine1 must be the same
+
+    git still tracks my .vs folder even though i have .vs/ in my .gitignore file
 */
 
 __declspec(align(64)) float  y[M], z[M]; // declare arrays as 64-byte aligned
 __declspec(align(64)) float A[N][N], x[N], w[N]; // declare arrays as 64-byte aligned
-__declspec(align(64)) float y_copy[M], w_copy[N]; // Copies of y and w arrays
+
+__declspec(align(64)) float y_copy[M], w_copy[N]; // Copies of y and w arrays ******************** necessary?
 
 int main() {
 

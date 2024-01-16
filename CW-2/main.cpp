@@ -98,6 +98,19 @@ int main() {
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
 
+    initialize(); // reinitialise the arrays
+
+    printf("\nRoutine2_vec:");
+    start_time = omp_get_wtime(); //start timer
+
+    for (t = 0; t < TIMES2; t++)
+		routine2_vec(alpha, beta);
+
+    run_time = omp_get_wtime() - start_time; //end timer
+    printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
+
+    printf("\n-----------------COMPARISON------------------------------\n");
+
     return 0; // return 0 to indicate that program has finished successfully
 }
 
@@ -133,6 +146,8 @@ void routine1(float alpha, float beta) { // routine1: y[i] = alpha * y[i] + beta
     for (i = 0; i < M; i++)
         y[i] = alpha * y[i] + beta * z[i]; // for each iteration of the array, i = (alpha * y[i]) + (beta * z[i])
 }   
+
+// AVX implementation of routine1
 
 void routine1_vec(float alpha, float beta) {
 
@@ -172,6 +187,42 @@ void routine1_vec(float alpha, float beta) {
     //}
 }
 
+// SSE implementation of routine1
+
+//void routine1_vec(float alpha, float beta) {
+//
+//	unsigned int i; // loop counter
+//
+//	// Create AVX vectors for alpha and beta
+//	__m128 alpha_vec = _mm_set1_ps(alpha); // set1_ps sets all elements of alpha to alpha_vec, which holds 4 elements
+//	// essentially there's 4 seperate float alpha = 0.023f; iterations
+//	// alpha_vec = |0.023f|0.023f|0.023f|0.023f|
+//
+//	__m128 beta_vec = _mm_set1_ps(beta); // set1_ps sets all elements of beta to beta_vec, which holds 4 elements
+//	// essentially there's 4 seperate float beta = 0.045f; iterations
+//	// beta_vec = |0.045|0.045|0.045|0.045|
+//
+//	// process 4 elements at a time for each iteration, until i reaches M
+//    for (i = 0; i < M; i += 4) {
+//
+//		// & means the address of the variable, so &y[i] means the address of the y[i] variable
+//		__m128 y_vec = _mm_load_ps(&y[i]); // load 4 seperate iterated elements from y into AVX register 
+//		__m128 z_vec = _mm_load_ps(&z[i]); // load 4 seperate iterated elements from z into AVX register
+//
+//		// Perform the vectorized operations
+//		__m128 result_vec = _mm_add_ps(_mm_mul_ps(alpha_vec, y_vec),
+//            			_mm_mul_ps(beta_vec, z_vec));
+//		// result_vec = alpha * y_vec + beta * z_vec
+//
+//		// Store the results back into the y array
+//		_mm_store_ps(&y[i], result_vec);
+//	}
+//
+//	// Handle any remaining elements
+//    for (; i < M; i++) {
+//		y[i] = alpha * y[i] + beta * z[i];
+//	}
+//}
 
 /*
 
@@ -195,7 +246,7 @@ void routine2(float alpha, float beta) {
                 (alpha times higher loop iteration of A as
                 well as 'j', finally times x's j iterations 
             */
-} // [ ] TODO: Make routine2_vec
+} // [x] TODO: Make routine2_vec
 
 /*
     
@@ -205,6 +256,8 @@ void routine2(float alpha, float beta) {
 
 */
 
+// AVX implementation of routine2
+
 void routine2_vec(float alpha, float beta) {
 
     unsigned int i, j;
@@ -213,33 +266,50 @@ void routine2_vec(float alpha, float beta) {
     // essentially there's 8 32-bit seperate float alpha = 0.023f; iterated elements
     __m256 beta_vec = _mm256_set1_ps(beta);
     // essentially there's 8 32-bit seperate float beta = 0.045f; iterated elements
- 
 
-    /* 
-        __m256: means a 256 - bit variable that can hold eight 32 - bit single - precision floating - point values.
-        __mm256_set1_ps: initializes all elements of this 256-bit vector with the same single-precision floating-point value.
-    */
-    for (i = 0; i < N; i+=8) { // iterate over with 8 seperate elements at a time
-        __m256 w_vec = _mm256_load_ps(&w[i]); // load 8 seperate iterated elements from w into AVX register
 
-		__m256 sum_vec = _mm256_setzero_ps(); // initialize a vector to accumulate 8 results at a time
+    /*
+      ** AVX intrinsic Functions: **
 
-        // setzero_ps() sets all 8 elements of the sum_vec to zero  WHY??????
+        __m256: means a 256-bit variable that can hold eight 32-bit single-precision floating-point values.
+        _mm256_load_ps: loads eight 32-bit single-precision floating-point values.
+        _mm256_store_ps: stores eight 32-bit single-precision floating-point values into memory.
+        _mm256_add_ps: adds eight 32-bit single-precision floating-point values.
+        _mm256_mul_ps: multiplies eight 32-bit single-precision floating-point values
+        _mm256_setzero_ps: initializes all elements of this 256-bit vector to zero.
+        _mm256_set1_ps: initializes all elements of this 256-bit vector with the same single-precision floating-point value.
+    /*
 
-		for (j = 0; j < N; j++) { // iterate over with 8 seperate elements at a time
-        			__m256 a_vec = _mm256_load_ps(&A[i][j]); // load 8 seperate iterated elements from A[i][j] into AVX register
-        			__m256 x_vec = _mm256_set1_ps(x[j]); // set1_ps sets all elements of x to x_vec, which holds 8 elements
-        
-        			sum_vec = _mm256_add_ps(sum_vec, _mm256_mul_ps(alpha_vec, _mm256_mul_ps(a_vec, x_vec))); // perform the vectorized operation for the matrix-vector multiplication
-        		}
+         "i" is the row of the matrix, while "j" is the column of the matrix.
 
-		w_vec = _mm256_sub_ps(w_vec, beta_vec); // subtract beta and add to the initial value of w[i]
-		w_vec = _mm256_add_ps(w_vec, sum_vec);
+          for (i = 0; i < N; i++)
+            for (j = 0; j < N; j++)
+                w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
+        */
+    
+    for (i = 0; i < N; i++) { // Note: Not processing 8 w[i] values at a time here
+        __m256 sum_vec = _mm256_setzero_ps(); // To accumulate sums
 
-		_mm256_store_ps(&w[i], w_vec); // store the results back into the w array   
+        for (j = 0; j < N; j += 8) { // Process 8 elements of A and x at a time
+            __m256 a_vec = _mm256_load_ps(&A[i][j]); // Load 8 elements from A[i][j...j+7]
+            __m256 x_vec = _mm256_load_ps(&x[j]);   // Load 8 elements from x[j...j+7]
 
+            // Multiply and accumulate
+            sum_vec = _mm256_add_ps(sum_vec, _mm256_mul_ps(alpha_vec, _mm256_mul_ps(a_vec, x_vec)));
+        }
+
+        // Horizontal sum of sum_vec to get a single float result
+        float partialSums[8];
+        _mm256_store_ps(partialSums, sum_vec);
+        float dotProduct = partialSums[0] + partialSums[1] + partialSums[2] + partialSums[3] +
+            partialSums[4] + partialSums[5] + partialSums[6] + partialSums[7];
+
+        // Now modify w[i]
+        w[i] = (w[i] - beta) + dotProduct; // Adjust this line as per actual computation
     }
+
 }
+
 
 
 

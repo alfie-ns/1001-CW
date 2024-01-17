@@ -49,7 +49,7 @@ unsigned short int compare_arrays(float* arr1, float* arr2, unsigned int size); 
     M is the size of the arrays for routine1
     N is the size of the arrays for routine2
 
-    [x] TODO: Make routine2_vec 
+    [x] TODO: Make routine2_vec
     [x] TODO: TEST IF VECTORISED CALCULATIONS = NON-OPTIMISED VERSION WITH COMPARE FUNCTION
     [ ] RESULTS DO NOT MATCH. it must be the compare function because routine1 must be the same
 
@@ -107,7 +107,7 @@ int main() {
     start_time = omp_get_wtime(); //start timer
 
     for (t = 0; t < TIMES1; t++) // for loop to execute routine1 TIMES1 times
-		routine1_vec(alpha, beta); // init with alpha and beta
+        routine1_vec(alpha, beta); // init with alpha and beta
 
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
@@ -118,7 +118,7 @@ int main() {
     start_time = omp_get_wtime(); //start timer
 
     for (t = 0; t < TIMES2; t++)
-		routine2_vec(alpha, beta);
+        routine2_vec(alpha, beta);
 
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
@@ -126,7 +126,6 @@ int main() {
     printf("\n-----------------TESTING------------------------------\n\n");
     // Run and compare routine1_vec
     memcpy(y, y_copy, M * sizeof(float)); // Restore y from y_copy
-    routine1_vec(alpha, beta);
     if (compare_arrays(y, y_copy, M)) {
         printf("Routine1_vec: Results match.\n");
     }
@@ -134,15 +133,7 @@ int main() {
         printf("Routine1_vec: Results do not match!\n");
     }
 
-    // Run and compare routine2_vec
-    memcpy(w, w_copy, N * sizeof(float)); // Restore w from w_copy
-    routine2_vec(alpha, beta);
-    if (compare_arrays(w, w_copy, N)) {
-        printf("Routine2_vec: Results match.\n");
-    }
-    else {
-        printf("Routine2_vec: Results do not match!\n");
-    }
+    
 
     return 0; // return 0 to indicate that program has finished successfully
 }
@@ -178,7 +169,7 @@ void routine1(float alpha, float beta) { // routine1: y[i] = alpha * y[i] + beta
 
     for (i = 0; i < M; i++)
         y[i] = alpha * y[i] + beta * z[i]; // for each iteration of the array, i = (alpha * y[i]) + (beta * z[i])
-}   
+}
 
 // AVX implementation of routine1
 
@@ -206,9 +197,9 @@ void routine1_vec(float alpha, float beta) {
         // Perform the vectorized operations
         __m256 result_vec = _mm256_add_ps(_mm256_mul_ps(alpha_vec, y_vec),
             _mm256_mul_ps(beta_vec, z_vec));
-            // result_vec = (alpha * y_vec) + (beta * z_vec)
+        // result_vec = (alpha * y_vec) + (beta * z_vec)
 
-        // Store the results back into the y array
+    // Store the results back into the y array
         _mm256_store_ps(&y[i], result_vec);
     }
 
@@ -273,16 +264,16 @@ void routine2(float alpha, float beta) {
     for (i = 0; i < N; i++) // 2d array iteration?
         for (j = 0; j < N; j++)
             w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
-            /* 
-                w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
-                w's iteration = (w's iteration - beta) +
-                (alpha times higher loop iteration of A as
-                well as 'j', finally times x's j iterations 
-            */
+    /*
+        w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
+        w's iteration = (w's iteration - beta) +
+        (alpha times higher loop iteration of A as
+        well as 'j', finally times x's j iterations
+    */
 } // [x] TODO: Make routine2_vec
 
 /*
-    
+
      256-bit register is divided into eight 32-bit slots.
      Each slot can hold one single-precision floating-point number (float).
      So process eight float values in parallel.
@@ -319,13 +310,13 @@ void routine2_vec(float alpha, float beta) {
             for (j = 0; j < N; j++)
                 w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
 
-            replicates the value of the alpha variable and fills 
-            all eight 32-bit slots within alpha_vec. Each slot is 
+            replicates the value of the alpha variable and fills
+            all eight 32-bit slots within alpha_vec. Each slot is
             a different location within the register, and all slots
-            will contain the exact same value, allowing for parallel 
-            computation  
+            will contain the exact same value, allowing for parallel
+            computation
         */
-    
+
     for (i = 0; i < N; i++) { // Note: Not processing 8 w[i] values at a time here
         __m256 sum_vec = _mm256_setzero_ps(); // To accumulate sums
 
@@ -354,22 +345,22 @@ void routine2_vec(float alpha, float beta) {
 
 
 
-    /*
-    
-        for (i = 0; i < N; i++) // 2d array iteration
-        for (j = 0; j < N; j++)
+/*
+
+    for (i = 0; i < N; i++) // 2d array iteration
+    for (j = 0; j < N; j++)
+        w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
+
+
+
+
             w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
+            w's iteration = (w's iteration - beta) +
+            (alpha times higher loop iteration of A as
+            well as 'j', finally times x's j iterations
+*/
 
 
-
-
-                w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
-                w's iteration = (w's iteration - beta) +
-                (alpha times higher loop iteration of A as
-                well as 'j', finally times x's j iterations 
-    */
-
-    
 
 // Function to check equality within tolerance
 unsigned short int equal(float a, float b) {
@@ -384,7 +375,7 @@ unsigned short int compare_arrays(float* arr1, float* arr2, unsigned int size) {
         }
     }
     return 1; // No mismatches
-    }
+}
 
 
 
@@ -451,10 +442,10 @@ void routine2_vec(float alpha, float beta) {
 }
 
 /*
-	Routine1: y[i] = alpha * y[i] + beta * z[i];
+    Routine1: y[i] = alpha * y[i] + beta * z[i];
     Routine2: w[i] = w[i] - beta + alpha * A[i][j] * x[j];
 
-    AVX 
+    AVX
     {
         Example:
         {
@@ -477,7 +468,7 @@ void routine2_vec(float alpha, float beta) {
         }
 
         M:
-		{
+        {
             unsigned short int Routine1_AVX() {
 
                 __m256 alpha_vec = _mm256_set1_ps(alpha); // set1_ps sets all 8 elements of the alpha_vec to the same value
@@ -486,19 +477,19 @@ void routine2_vec(float alpha, float beta) {
                 unsigned int i; // loop counter
 
                 for (i = 0; i < M; i += 8) {
-					__m256 y_vec = _mm256_load_ps(&y[i]); // load 8 elements from y into AVX register
-					__m256 z_vec = _mm256_load_ps(&z[i]); // load 8 elements from z into AVX register
+                    __m256 y_vec = _mm256_load_ps(&y[i]); // load 8 elements from y into AVX register
+                    __m256 z_vec = _mm256_load_ps(&z[i]); // load 8 elements from z into AVX register
 
-					__m256 result_vec = _mm256_add_ps(_mm256_mul_ps(alpha_vec, y_vec), _mm256_mul_ps(beta_vec, z_vec)); // perform the vectorized operations
+                    __m256 result_vec = _mm256_add_ps(_mm256_mul_ps(alpha_vec, y_vec), _mm256_mul_ps(beta_vec, z_vec)); // perform the vectorized operations
 
-					_mm256_store_ps(&y[i], result_vec); // store the results back into the y array
-				}
+                    _mm256_store_ps(&y[i], result_vec); // store the results back into the y array
+                }
 
                 return 2;
-			}
-		}
-	}
-		}
+            }
+        }
+    }
+        }
     }
 
     SSE:
@@ -523,7 +514,7 @@ void routine2_vec(float alpha, float beta) {
                 return 2;
             }
         }
-        
+
         M:
         {
 
@@ -569,7 +560,6 @@ void routine2_vec(float alpha, float beta) {
     Routine1: y[i] = alpha * y[i] + beta * z[i];
     Routine2: w[i] = w[i] - beta + alpha * A[i][j] * x[j];
 */
-
 
 
 

@@ -95,6 +95,7 @@ int main() {
     for (t = 0; t < TIMES2; t++)
         routine2(alpha, beta);
 
+    memcpy(y_copy, y, M * sizeof(float)); // copy y to test if y_copy == y
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
 
@@ -114,16 +115,18 @@ int main() {
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
 
-    //initialize(); // reinitialise the arrays
+    initialize(); // reinitialise the arrays
 
-    //printf("\nRoutine2_vec:");
-    //start_time = omp_get_wtime(); //start timer
+    printf("\nRoutine2_vec:");
+    start_time = omp_get_wtime(); //start timer
 
-    //for (t = 0; t < TIMES2; t++)
-    //    routine2_vec(alpha, beta);
+    for (t = 0; t < TIMES2; t++)
+		routine2_vec(alpha, beta);
 
-    //run_time = omp_get_wtime() - start_time; //end timer
-    //printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
+    run_time = omp_get_wtime() - start_time; //end timer
+    printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
+
+
 
     printf("\n-----------------TESTING------------------------------\n\n");
     
@@ -134,6 +137,13 @@ int main() {
     else {
         printf("Routine1_vec: Results do not match!\n");
     }
+
+    if (compare_arrays(w, w, N)) {
+		printf("Routine2_vec: Results match.\n");
+	}
+    else {
+		printf("Routine2_vec: Results do not match!\n");
+	}
 
 
 
@@ -223,7 +233,7 @@ unsigned short int equal(float a, float b) {
 unsigned short int compare_arrays(float* arr1, float* arr2, unsigned int size) {
     for (unsigned int i = 0; i < size; i++) {
         if (!equal(arr1[i], arr2[i])) {
-            printf("Mismatch at index %u: %f != %f\n", i, arr1[i], arr2[i]); // For debugging
+            printf("Mismatch at index %u: %f != %f\n", i, arr1[i], arr2[i]); // debugging
             return 0; // Mismatch found
         }
     }
@@ -245,7 +255,44 @@ void routine2(float alpha, float beta) {
 
 }
 
+void routine2_vec(float alpha, float beta) {
+    unsigned int i, j;
 
+    // Broadcast alpha and beta to all elements of 256-bit vectors
+    __m256 alpha_vec = _mm256_set1_ps(alpha);
+    __m256 beta_vec = _mm256_set1_ps(beta);
+
+    for (i = 0; i < N; i++) {
+        // Start with w[i] and broadcast it to all elements of a vector
+        __m256 w_vec = _mm256_set1_ps(w[i]);
+
+        // Subtract beta from w[i]
+        w_vec = _mm256_sub_ps(w_vec, beta_vec);
+
+        // Initialize a vector to accumulate the results
+        __m256 sum_vec = _mm256_setzero_ps();
+
+        for (j = 0; j < N; j += 8) {
+            // Load 8 consecutive values from the matrix row and vector x
+            __m256 a_vec = _mm256_load_ps(&A[i][j]);
+            __m256 x_vec = _mm256_load_ps(&x[j]);
+
+            // Perform the multiplication and accumulate the results
+            sum_vec = _mm256_add_ps(sum_vec, _mm256_mul_ps(a_vec, x_vec));
+        }
+
+        // Sum all elements of sum_vec into a single value
+        sum_vec = _mm256_hadd_ps(sum_vec, sum_vec); // Horizontally add pairs of elements
+        sum_vec = _mm256_hadd_ps(sum_vec, sum_vec); // Repeat to sum all elements
+
+        // Extract the final result from the sum_vec
+        float temp[8]; // Temporary array to store the results
+        _mm256_store_ps(temp, sum_vec);
+
+        // The horizontal add above has added pairs, and the result we need is in the first and fifth element
+        w[i] = temp[0] + temp[4] * alpha - beta; // Add the accumulated sum to w[i] (accounting for the initial subtraction)
+    }
+}
 
 
 

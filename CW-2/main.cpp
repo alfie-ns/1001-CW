@@ -226,7 +226,7 @@ void routine1_vec(float alpha, float beta) {
 //    return (fabs(temp) / fabs(b + EPSILON)) < EPSILON;
 //}
 unsigned short int equal(float a, float b) {
-    return fabs(a - b) < EPSILON;
+    return fabs(a - b) < EPSILON; // fabs returns the absolute value of a-b and compares to see if less than EPSILON
 }
 
 

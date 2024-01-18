@@ -25,7 +25,7 @@
 #define ARITHMETIC_OPERATIONS2 4*N*N // number of arithmetic operations in routine2
 #define TIMES2 1 // number of times routine2 is executed
 
-#define EPSILON 0.00001
+#define EPSILON 0.00001 // tolerance of which two floats are considered equal
 
 
 //function declarations
@@ -51,7 +51,7 @@ unsigned short int compare_arrays(float* arr1, float* arr2, unsigned int size); 
 
     [x] TODO: Make routine2_vec
     [x] TODO: TEST IF VECTORISED CALCULATIONS = NON-OPTIMISED VERSION WITH COMPARE FUNCTION
-    [ ] RESULTS DO NOT MATCH. it must be the compare function because routine1 must be the same
+    [x] RESULTS DO NOT MATCH. it must be the compare function because routine1 must be the same
 
     git still tracks my .vs folder even though i have .vs/ in my .gitignore file
 */
@@ -82,7 +82,7 @@ int main() {
     for (t = 0; t < TIMES1; t++) // for loop to execute routine1 TIMES1 times
         routine1(alpha, beta); // init with alpha and beta
     // declare test-copy arrays as 64-byte aligned
-    memcpy(y_copy, y, M * sizeof(float)); // copy y to test if y_copy == y
+    memcpy(y_copy, y, M * sizeof(float)); // copy routine1 to test comparison with vectorised version
 
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
@@ -95,7 +95,7 @@ int main() {
     for (t = 0; t < TIMES2; t++)
         routine2(alpha, beta);
 
-    memcpy(y_copy, y, M * sizeof(float)); // copy y to test if y_copy == y
+    memcpy(y_copy, y, M * sizeof(float)); // copy routine2 to test comparison with vectorised version
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
 

@@ -60,7 +60,22 @@ __declspec(align(64)) float  y[M], z[M]; // declare arrays as 64-byte aligned
 __declspec(align(64)) float A[N][N], x[N], w[N]; // declare arrays as 64-byte aligned
 
 __declspec(align(64)) float y_copy[M]; // declare array that holds cloned y array for testing
+__declspec(align(64)) float w_copy[N]; // declare array that holds cloned w array for testing
 
+unsigned short int equal(float a, float b) {
+    return fabs(a - b) < EPSILON; // fabs returns the absolute value of a-b and compares to see if less than EPSILON
+}
+
+
+unsigned short int compare_arrays(float* arr1, float* arr2, unsigned int size) {
+    for (unsigned int i = 0; i < size; i++) {
+        if (!equal(arr1[i], arr2[i])) {
+            printf("Mismatch at index %u: %f != %f\n", i, arr1[i], arr2[i]); // debugging
+            return 0; // Mismatch found
+        }
+    }
+    return 1; // No mismatches
+}
 
 int main() {
 
@@ -81,7 +96,6 @@ int main() {
 
     for (t = 0; t < TIMES1; t++) // for loop to execute routine1 TIMES1 times
         routine1(alpha, beta); // init with alpha and beta
-    // declare test-copy arrays as 64-byte aligned
     memcpy(y_copy, y, M * sizeof(float)); // copy routine1 to test comparison with vectorised version
 
     run_time = omp_get_wtime() - start_time; //end timer
@@ -95,7 +109,7 @@ int main() {
     for (t = 0; t < TIMES2; t++)
         routine2(alpha, beta);
 
-    memcpy(y_copy, y, M * sizeof(float)); // copy routine2 to test comparison with vectorised version
+    memcpy(w_copy, w, M * sizeof(float));
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
 
@@ -104,7 +118,7 @@ int main() {
     printf("\n-----------------VECTORISED------------------------------\n");
 
     // [x] make copies before running vectorised versions
-    
+
 
     printf("\nRoutine1_vec:");
     start_time = omp_get_wtime(); //start timer
@@ -115,22 +129,6 @@ int main() {
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
 
-    initialize(); // reinitialise the arrays
-
-    printf("\nRoutine2_vec:");
-    start_time = omp_get_wtime(); //start timer
-
-    for (t = 0; t < TIMES2; t++)
-		routine2_vec(alpha, beta);
-
-    run_time = omp_get_wtime() - start_time; //end timer
-    printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
-
-
-
-    printf("\n-----------------TESTING------------------------------\n\n");
-    
-    
     if (compare_arrays(y, y_copy, M)) {
         printf("Routine1_vec: Results match.\n");
     }
@@ -138,18 +136,30 @@ int main() {
         printf("Routine1_vec: Results do not match!\n");
     }
 
-    if (compare_arrays(w, w, N)) {
-		printf("Routine2_vec: Results match.\n");
-	}
+    initialize(); // reinitialise the arrays
+
+    printf("\nRoutine2_vec:");
+    start_time = omp_get_wtime(); //start timer
+
+    for (t = 0; t < TIMES2; t++)
+        routine2_vec(alpha, beta);
+
+    
+    run_time = omp_get_wtime() - start_time; //end timer
+    printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
+    
+    // printf("\n-----------------TESTING------------------------------\n\n");
+    if (compare_arrays(w, w_copy, N)) {
+        printf("Routine2_vec: Results match.\n");
+    }
     else {
-		printf("Routine2_vec: Results do not match!\n");
-	}
+        printf("Routine2_vec: Results do not match!\n");
+    }
 
 
 
     return 0; // return 0 to indicate that program has finished successfully
 }
-
 void initialize() {
 
     unsigned int i, j;
@@ -187,14 +197,21 @@ void routine1(float alpha, float beta) { // routine1: y[i] = alpha * y[i] + beta
 
 void routine1_vec(float alpha, float beta) {
 
+    // routine1: y[i] = (alpha * y[i]) + (beta * z[i]);
+
     unsigned int i; // loop counter
 
     // Create AVX vectors for alpha and beta
     __m256 alpha_vec = _mm256_set1_ps(alpha); // set1_ps sets all elements of alpha to alpha_vec, which holds 8 elements
     __m256 beta_vec = _mm256_set1_ps(beta); // set1_ps sets all elements of beta to beta_vec, which holds 8 elements
-    // essentially there's 8 seperate float beta = 0.045f; iterations
-    // beta_vec = |0.045|0.045|0.045|0.045|0.045|0.045|0.045|0.045|
+    /* 
+       
+       essentially there's 8 seperate float alpha = 0.023f, beta = 0.045f iterations in one iteration of the loop
+    
+       alpha_vec = |0.023|0.023|0.023|0.023|0.023|0.023|0.023|0.023|
+       beta_vec = |0.045|0.045|0.045|0.045|0.045|0.045|0.045|0.045|
 
+    */
     // process 8 elements at a time for each iteration, until i reaches M
     for (i = 0; i < M; i += 8) {
 
@@ -203,41 +220,19 @@ void routine1_vec(float alpha, float beta) {
         __m256 z_vec = _mm256_load_ps(&z[i]); // load 8 seperate iterated elements from z into AVX register
 
         // Perform the vectorized operations
-        __m256 result_vec = _mm256_add_ps(_mm256_mul_ps(alpha_vec, y_vec),
-            _mm256_mul_ps(beta_vec, z_vec));
-        // result_vec = (alpha * y_vec) + (beta * z_vec)
+        __m256 result_vec = _mm256_add_ps(_mm256_mul_ps(alpha_vec, y_vec), _mm256_mul_ps(beta_vec, z_vec));
 
-    // Store the results back into the y array
+        // Store the results back into the y array
         _mm256_store_ps(&y[i], result_vec);
     }
 
     // IS THIS NECCESSARY? [x]
     // No because M is a multiple of 8, so the loop will always be executed?
 
-    //// Handle any remaining elements
-    //for (; i < M; i++) {
-    //    y[i] = alpha * y[i] + beta * z[i];
-    //}
-}
-
-// Function to check equality within tolerance
-//unsigned short int equal(float a, float b) {
-//    float temp = a - b;
-//    return (fabs(temp) / fabs(b + EPSILON)) < EPSILON;
-//}
-unsigned short int equal(float a, float b) {
-    return fabs(a - b) < EPSILON; // fabs returns the absolute value of a-b and compares to see if less than EPSILON
-}
-
-
-unsigned short int compare_arrays(float* arr1, float* arr2, unsigned int size) {
-    for (unsigned int i = 0; i < size; i++) {
-        if (!equal(arr1[i], arr2[i])) {
-            printf("Mismatch at index %u: %f != %f\n", i, arr1[i], arr2[i]); // debugging
-            return 0; // Mismatch found
-        }
+    // Handle any remaining elements
+    for (; i < M; i++) {
+        y[i] = alpha * y[i] + beta * z[i];
     }
-    return 1; // No mismatches
 }
 
 

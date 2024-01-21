@@ -292,38 +292,93 @@ void routine2(float alpha, float beta) {
 
 void routine2_vec(float alpha, float beta) {
 
-    unsigned int i = 0, j = 0;
+    unsigned int i = 0, j = 0; // init loop counters
 
-    // init all elements
-    __m256 alpha_vec, beta_vec, a_vec, x_vec, w_vec;
+    // Broadcast variables to all elements of 256-bit vectors
+    __m256 alpha_vec = _mm256_set1_ps(alpha);
+    __m256 beta_vec = _mm256_set1_ps(beta);
 
+    __m256 a_vec = _mm256_set1_ps(A[i][j]);
+    __m256 x_vec = _mm256_set1_ps(x[j]);
+    __m256 w_vec = _mm256_set1_ps(w[j]);
 
-    for (unsigned int i = 0; i < N; i++) { // outer loop of 2d array
-        
-        for (unsigned int j = 0; j < N; j += 8) { // inner loop of 2d array
-            
-            // load 8 consecutive values from the matrix row and vector x
+    __m256 aSide_vec;
+    __m256 bSide_vec;
+
+    for (i = 0; i < N; i++) { 
+        __m256 sum_vec = _mm256_setzero_ps(); // Initialise the accumulator vector as zero
+
+        for (j = 0; j < N; j += 8) {
+
             alpha_vec = _mm256_load_ps(&alpha);
             beta_vec = _mm256_load_ps(&beta);
 
-            a_vec = _mm256_load_ps(&A[i][j]);
-            x_vec = _mm256_load_ps(&x[j]);
-            w_vec = _mm256_load_ps(&w[i]);
-           
-            // 2D i + j LOOP -> w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
+            __m256 a_vec = _mm256_load_ps(&A[i][j]); // Load elements from A
+            __m256 x_vec = _mm256_load_ps(&x[j]);    // Load elements from x
+            __m256 w_vec = _mm256_load_ps(&w[i]);    // Load elements from w
 
-            w_vec = _mm256_sub_ps(w_vec, beta_vec); // w_vec = (w[i] - beta)
 
-            alpha_vec = _mm256_mul_ps(alpha_vec, a_vec); // alpha_vec = (alpha * A[i][j]
-            alpha_vec = _mm256_mul_ps(alpha_vec, x_vec); // alpha_vec = (alpha * A[i][j] * x[j])
+            // Fused multiply-add: (alpha_vec * a_vec) * x_vec + sum_vec
+            bSide_vec = _mm256_sub_ps(w_vec, beta_vec); // Compute (w[i] - beta)
+            aSide_vec = _mm256_fmadd_ps(alpha_vec, a_vec, _mm256_mul_ps(x_vec, sum_vec)); // Compute (alpha*A[i][ij]*x[j]) + sum_vec
 
-            w_vec = _mm256_add_ps(w_vec, alpha_vec); // w_vec = (w[i] - beta) + (alpha * A[i][j] * x[j])
-            
-            // store the results back into the w array
-            _mm256_store_ps(&w[i], w_vec);
+            // Horizontal add to sum up elements of sum_vec
+            sum_vec = _mm256_hadd_ps(aSide_vec, bSide_vec);
+
+            // Store the result back into the w array
+            _mm256_store_ps(&w[j], sum_vec);
+
+            // (w[i] - beta) + ((alpha * A[i][j]) * x[j]);
+
+            /*
+                Order of Operations:
+
+                1. alpha*A[i][ij]*x[j]
+                2. (w[i] - beta)
+                3. (w[i] - beta) + (alpha*A[i][ij]*x[j])
+
+            */
         }
     }
 }
+
+//void routine2_vec(float alpha, float beta) {
+//    for (unsigned int i = 0; i < N; i++) {
+//        __m256 alpha_vec = _mm256_set1_ps(alpha);
+//        __m256 sum_vec = _mm256_setzero_ps();
+//
+//        for (unsigned int j = 0; j < N; j += 8) {
+//            __m256 a_vec = _mm256_load_ps(&A[i][j]); // Load 8 elements from A[i]
+//            __m256 x_vec = _mm256_load_ps(&x[j]);    // Load 8 elements from x
+//
+//            // Fused multiply-add: (alpha_vec * a_vec) * x_vec + sum_vec
+//            sum_vec = _mm256_fmadd_ps(alpha_vec, a_vec, _mm256_mul_ps(x_vec, sum_vec));
+//        }
+//
+//        // Horizontal add to sum up elements of sum_vec
+//        sum_vec = _mm256_hadd_ps(sum_vec, sum_vec);
+//        sum_vec = _mm256_hadd_ps(sum_vec, sum_vec);
+//        float temp[8];
+//        _mm256_store_ps(temp, sum_vec);
+//        float asum_scalar = temp[0] + temp[4]; // Sum the horizontal adds
+//
+//        // Combine the alpha sum and beta part
+//        __m256 w_vec = _mm256_set1_ps(w[i]);
+//        __m256 beta_vec = _mm256_set1_ps(beta);
+//        __m256 bsum_vec = _mm256_sub_ps(w_vec, beta_vec); // Compute (w[i] - beta)
+//        __m256 result_vec = _mm256_add_ps(_mm256_set1_ps(asum_scalar), bsum_vec);
+//
+//        // Extract the scalar value from result_vec and assign it to w[i]
+//        float result_scalar[8];
+//        _mm256_store_ps(result_scalar, result_vec);
+//        w[i] = result_scalar[0]; // Assuming the first element holds the desired result
+//    }
+//}
+
+
+
+
+
 
 
 
@@ -338,7 +393,9 @@ void routine2_vec(float alpha, float beta) {
        _mm256_mul_ps: multiplies eight 32-bit single-precision floating-point values
        _mm256_setzero_ps: initializes all elements of this 256-bit vector to zero.
        _mm256_set1_ps: initializes all elements of this 256-bit vector with the same single-precision floating-point value.
-       _mm256_fmad_ps?
+       _mm256_fmad_ps: performs a fused multiply-add operation on eight 32-bit single-precision floating-point values.
+       _mm256_hadd_ps: horizontally adds adjacent pairs of 32-bit single-precision floating-point values.
+
    /*
 
 

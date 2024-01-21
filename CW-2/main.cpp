@@ -15,6 +15,8 @@
 #include <immintrin.h> // AVX intrinsics
 #include <omp.h> //openmp library
 
+// TODO: [ ] FIX COMPARISON FUNCTION FOR ROUTINE2
+
 
 
 #define M 1024*512 // size of arrays for routine1
@@ -96,8 +98,7 @@ int main() {
 
     for (t = 0; t < TIMES1; t++) // for loop to execute routine1 TIMES1 times
         routine1(alpha, beta); // init with alpha and beta
-    memcpy(y_copy, y, M * sizeof(float)); // copy routine1 to test comparison with vectorised version
-
+    
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
 
@@ -109,7 +110,7 @@ int main() {
     for (t = 0; t < TIMES2; t++)
         routine2(alpha, beta);
 
-    memcpy(w_copy, w, M * sizeof(float));
+    
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
 
@@ -125,6 +126,7 @@ int main() {
 
     for (t = 0; t < TIMES1; t++) // for loop to execute routine1 TIMES1 times
         routine1_vec(alpha, beta); // init with alpha and beta
+    memcpy(y_copy, y, M * sizeof(float)); // copy routine1 to test comparison with vectorised version
 
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
@@ -143,6 +145,8 @@ int main() {
 
     for (t = 0; t < TIMES2; t++)
         routine2_vec(alpha, beta);
+
+    memcpy(w_copy, w, N * sizeof(float));
 
     
     run_time = omp_get_wtime() - start_time; //end timer
@@ -229,10 +233,6 @@ void routine1_vec(float alpha, float beta) {
     // IS THIS NECCESSARY? [x]
     // No because M is a multiple of 8, so the loop will always be executed?
 
-    // Handle any remaining elements
-    for (; i < M; i++) {
-        y[i] = alpha * y[i] + beta * z[i];
-    }
 }
 
 
@@ -302,82 +302,59 @@ void routine2_vec(float alpha, float beta) {
     __m256 x_vec = _mm256_set1_ps(x[j]);
     __m256 w_vec = _mm256_set1_ps(w[j]);
 
-    __m256 aSide_vec;
-    __m256 bSide_vec;
+    __m256 vec_A;
+    __m256 vec_B;
+    __m256 vec_C;
 
     for (i = 0; i < N; i++) { 
         __m256 sum_vec = _mm256_setzero_ps(); // Initialise the accumulator vector as zero
 
-        for (j = 0; j < N; j += 8) {
+            
+
+
+        for (j = 0; j < N; j+=8) {
+
+            
+
+            __m256 a_vec = _mm256_load_ps(&A[i][j]); // Load elements from A
+            __m256 w_vec = _mm256_load_ps(&w[i]);    // Load elements from w
+            __m256 x_vec = _mm256_load_ps(&x[j]);
+            // Load elements from x
+           
 
             alpha_vec = _mm256_load_ps(&alpha);
             beta_vec = _mm256_load_ps(&beta);
 
-            __m256 a_vec = _mm256_load_ps(&A[i][j]); // Load elements from A
-            __m256 x_vec = _mm256_load_ps(&x[j]);    // Load elements from x
-            __m256 w_vec = _mm256_load_ps(&w[i]);    // Load elements from w
+            vec_C = _mm256_sub_ps(w_vec, beta_vec); // Compute (w[i] - b
+            vec_A = _mm256_mul_ps(alpha_vec, a_vec); // Compute (alpha*A[i][ij])
+            vec_B = _mm256_mul_ps(vec_A, x_vec); // Compute (alpha*A[i][ij]) * x[j]
 
-
-            // Fused multiply-add: (alpha_vec * a_vec) * x_vec + sum_vec
-            bSide_vec = _mm256_sub_ps(w_vec, beta_vec); // Compute (w[i] - beta)
-            aSide_vec = _mm256_fmadd_ps(alpha_vec, a_vec, _mm256_mul_ps(x_vec, sum_vec)); // Compute (alpha*A[i][ij]*x[j]) + sum_vec
+            
+            
 
             // Horizontal add to sum up elements of sum_vec
-            sum_vec = _mm256_hadd_ps(aSide_vec, bSide_vec);
+            sum_vec = _mm256_add_ps(vec_B, vec_C);
+            printf("sum_vec: %f\n", sum_vec);
 
             // Store the result back into the w array
-            _mm256_store_ps(&w[j], sum_vec);
+           
 
             // (w[i] - beta) + ((alpha * A[i][j]) * x[j]);
 
             /*
                 Order of Operations:
 
-                1. alpha*A[i][ij]*x[j]
-                2. (w[i] - beta)
-                3. (w[i] - beta) + (alpha*A[i][ij]*x[j])
+                1. alpha*A[i][j] - A
+                2. A *x[j] - B
+                3. (w[i] - beta) - C
+                4. B+C - D
 
             */
         }
+
+        _mm256_store_ps(&w[i], sum_vec);
     }
 }
-
-//void routine2_vec(float alpha, float beta) {
-//    for (unsigned int i = 0; i < N; i++) {
-//        __m256 alpha_vec = _mm256_set1_ps(alpha);
-//        __m256 sum_vec = _mm256_setzero_ps();
-//
-//        for (unsigned int j = 0; j < N; j += 8) {
-//            __m256 a_vec = _mm256_load_ps(&A[i][j]); // Load 8 elements from A[i]
-//            __m256 x_vec = _mm256_load_ps(&x[j]);    // Load 8 elements from x
-//
-//            // Fused multiply-add: (alpha_vec * a_vec) * x_vec + sum_vec
-//            sum_vec = _mm256_fmadd_ps(alpha_vec, a_vec, _mm256_mul_ps(x_vec, sum_vec));
-//        }
-//
-//        // Horizontal add to sum up elements of sum_vec
-//        sum_vec = _mm256_hadd_ps(sum_vec, sum_vec);
-//        sum_vec = _mm256_hadd_ps(sum_vec, sum_vec);
-//        float temp[8];
-//        _mm256_store_ps(temp, sum_vec);
-//        float asum_scalar = temp[0] + temp[4]; // Sum the horizontal adds
-//
-//        // Combine the alpha sum and beta part
-//        __m256 w_vec = _mm256_set1_ps(w[i]);
-//        __m256 beta_vec = _mm256_set1_ps(beta);
-//        __m256 bsum_vec = _mm256_sub_ps(w_vec, beta_vec); // Compute (w[i] - beta)
-//        __m256 result_vec = _mm256_add_ps(_mm256_set1_ps(asum_scalar), bsum_vec);
-//
-//        // Extract the scalar value from result_vec and assign it to w[i]
-//        float result_scalar[8];
-//        _mm256_store_ps(result_scalar, result_vec);
-//        w[i] = result_scalar[0]; // Assuming the first element holds the desired result
-//    }
-//}
-
-
-
-
 
 
 

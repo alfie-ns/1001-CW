@@ -40,7 +40,7 @@ void routine1_vec(float alpha, float beta); // calls routine1_vec with alpha and
 void routine2_vec(float alpha, float beta); // calls routine2_vec with alpha and beta
 
 unsigned short int equal(float a, float b); // function to check equality within tolerance
-unsigned short int compare_arrays(float* arr1, float* arr2, unsigned int size); // function to compare two arrays
+unsigned short int compare_arrays_one(float* arr1, float* arr2, unsigned int size); // function to compare two arrays
 
 /*
     Routine1: y[i] = (alpha * y[i]) + (beta * z[i]);
@@ -69,7 +69,8 @@ unsigned short int equal(float a, float b) {
 }
 
 
-unsigned short int compare_arrays(float* arr1, float* arr2, unsigned int size) {
+unsigned short int compare_arrays_one(float* arr1, float* arr2, unsigned int size) {
+
     for (unsigned int i = 0; i < size; i++) {
         if (!equal(arr1[i], arr2[i])) {
             printf("Mismatch at index %u: %f != %f\n", i, arr1[i], arr2[i]); // debugging
@@ -77,6 +78,31 @@ unsigned short int compare_arrays(float* arr1, float* arr2, unsigned int size) {
         }
     }
     return 1; // No mismatches
+}
+
+
+
+unsigned short int equal_2(float a, float b) {
+
+    return a == b;
+
+}
+unsigned short int compare_arrays_two(float* arr1, float* arr2, unsigned int size) {
+
+    for (unsigned int i = 0; i < size; i++) {
+        for (unsigned int j = 0; j < size; j++) {
+            //printf
+            if (equal(arr1[i, j], arr2[i, j])) {
+                
+                return 1; // No mismatches
+            }
+            else {
+				printf("Mismatch at index %u: %f != %f\n", i, arr1[i], arr2[i]); // debugging
+				return 0; // Mismatch found
+			}
+		}
+	}
+	return 1; // No mismatches
 }
 
 int main() {
@@ -131,7 +157,7 @@ int main() {
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
 
-    if (compare_arrays(y, y_copy, M)) {
+    if (compare_arrays_one(y, y_copy, M)) {
         printf("Routine1_vec: Results match.\n");
     }
     else {
@@ -153,7 +179,7 @@ int main() {
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
     
     // printf("\n-----------------TESTING------------------------------\n\n");
-    if (compare_arrays(w, w_copy, N)) {
+    if (compare_arrays_two(w, w_copy, N)) {
         printf("Routine2_vec: Results match.\n");
     }
     else {
@@ -294,7 +320,7 @@ void routine2_vec(float alpha, float beta) {
 
     unsigned int i = 0, j = 0; // init loop counters
 
-    // Broadcast variables to all elements of 256-bit vectors
+    // Broadcast variables to all elements of 256-bit vectors, replicate a single float value across all elements of each 256-bit vector
     __m256 alpha_vec = _mm256_set1_ps(alpha);
     __m256 beta_vec = _mm256_set1_ps(beta);
 
@@ -307,34 +333,31 @@ void routine2_vec(float alpha, float beta) {
     __m256 vec_C;
 
     for (i = 0; i < N; i++) { 
+        // outer loop for rows of matrix A and vector. 
         __m256 sum_vec = _mm256_setzero_ps(); // Initialise the accumulator vector as zero
 
             
 
 
-        for (j = 0; j < N; j+=8) {
+        for (j = 0; j < N; j+=8) { 
 
             
 
             __m256 a_vec = _mm256_load_ps(&A[i][j]); // Load elements from A
-            __m256 w_vec = _mm256_load_ps(&w[i]);    // Load elements from w
-            __m256 x_vec = _mm256_load_ps(&x[j]);
-            // Load elements from x
+            __m256 w_vec = _mm256_load_ps(&w[i]); // Load elements from w
+            __m256 x_vec = _mm256_load_ps(&x[j]); // Load elements from x
            
 
             alpha_vec = _mm256_load_ps(&alpha);
             beta_vec = _mm256_load_ps(&beta);
 
-            vec_C = _mm256_sub_ps(w_vec, beta_vec); // Compute (w[i] - b
-            vec_A = _mm256_mul_ps(alpha_vec, a_vec); // Compute (alpha*A[i][ij])
-            vec_B = _mm256_mul_ps(vec_A, x_vec); // Compute (alpha*A[i][ij]) * x[j]
-
+            vec_A = _mm256_mul_ps(alpha_vec, a_vec); // Compute (alpha*A[i][j])
+            vec_B = _mm256_mul_ps(vec_A, x_vec); // Compute (vec_A) * x[j]
+            vec_C = _mm256_sub_ps(w_vec, beta_vec); // Compute (w[i] - b)
             
-            
-
             // Horizontal add to sum up elements of sum_vec
             sum_vec = _mm256_add_ps(vec_B, vec_C);
-            printf("sum_vec: %f\n", sum_vec);
+            //printf("sum_vec: %f\n", sum_vec); Can't print mm256 types
 
             // Store the result back into the w array
            
@@ -348,7 +371,6 @@ void routine2_vec(float alpha, float beta) {
                 2. A *x[j] - B
                 3. (w[i] - beta) - C
                 4. B+C - D
-
             */
         }
 

@@ -15,8 +15,6 @@
 #include <immintrin.h> // AVX intrinsics
 #include <omp.h> //openmp library
 
-// TODO: [ ] FIX COMPARISON FUNCTION FOR ROUTINE2
-
 
 
 #define M 1024*512 // size of arrays for routine1
@@ -27,7 +25,7 @@
 #define ARITHMETIC_OPERATIONS2 4*N*N // number of arithmetic operations in routine2
 #define TIMES2 1 // number of times routine2 is executed
 
-#define EPSILON 0.00001 // tolerance of which two floats are considered equal
+#define EPSILON 0.0001 // tolerance of which two floats are considered equal
 
 
 //function declarations
@@ -40,8 +38,6 @@ void routine1_vec(float alpha, float beta); // calls routine1_vec with alpha and
 void routine2_vec(float alpha, float beta); // calls routine2_vec with alpha and beta
 
 unsigned short int equal(float a, float b); // function to check equality within tolerance
-unsigned short int compare_arrays_one(float* arr1, float* arr2, unsigned int size); // function to compare two arrays
-
 /*
     Routine1: y[i] = (alpha * y[i]) + (beta * z[i]);
     Routine2: w[i] = w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
@@ -64,47 +60,6 @@ __declspec(align(64)) float A[N][N], x[N], w[N]; // declare arrays as 64-byte al
 __declspec(align(64)) float y_copy[M]; // declare array that holds cloned y array for testing
 __declspec(align(64)) float w_copy[N]; // declare array that holds cloned w array for testing
 
-unsigned short int equal(float a, float b) {
-    return fabs(a - b) < EPSILON; // fabs returns the absolute value of a-b and compares to see if less than EPSILON
-}
-
-
-unsigned short int compare_arrays_one(float* arr1, float* arr2, unsigned int size) {
-
-    for (unsigned int i = 0; i < size; i++) {
-        if (!equal(arr1[i], arr2[i])) {
-            printf("Mismatch at index %u: %f != %f\n", i, arr1[i], arr2[i]); // debugging
-            return 0; // Mismatch found
-        }
-    }
-    return 1; // No mismatches
-}
-
-
-
-unsigned short int equal_2(float a, float b) {
-
-    return a == b;
-
-}
-unsigned short int compare_arrays_two(float* arr1, float* arr2, unsigned int size) {
-
-    for (unsigned int i = 0; i < size; i++) {
-        for (unsigned int j = 0; j < size; j++) {
-            //printf
-            if (equal(arr1[i, j], arr2[i, j])) {
-                
-                return 1; // No mismatches
-            }
-            else {
-				printf("Mismatch at index %u: %f != %f\n", i, arr1[i], arr2[i]); // debugging
-				return 0; // Mismatch found
-			}
-		}
-	}
-	return 1; // No mismatches
-}
-
 int main() {
 
     float alpha = 0.023f; // float value of 0.023 for beta alpha variable
@@ -117,6 +72,33 @@ int main() {
 
     initialize(); // initialise the arrays
 
+
+
+
+    /*
+
+    EXAMPLE FROM LAB-SESSION:
+    
+    unsigned short int ConstAdd_AVX() {
+
+	    __m256  ymm1, ymm2, ymm3;
+	    int i;
+
+	    ymm1 = _mm256_set_ps(2.1234f, 2.1234f, 2.1234f, 2.1234f, 2.1234f, 2.1234f, 2.1234f, 2.1234f); //set num1 values
+	    for (i = 0; i < M; i += 8) { //IMPORTANT: M MUST BE A MULTIPLE OF 8, OTHERWISE IT DOES NOT WORK
+		    ymm2 = _mm256_loadu_ps(&V2[i]); //load 8 elements of X2[]
+		    ymm3 = _mm256_add_ps(ymm1, ymm2); //num3 = num1 + num2
+		    _mm256_storeu_ps(&V1[i], ymm3); //store num3 to Y[i]. num3 has 8 FP values which they are stored into Y[i], Y[i+1], Y[i+2], Y[i+3], .. Y[i+7]
+	    }
+
+
+	    return 2;
+    }
+    
+    */
+
+
+
     printf("\n-----------------NON-OPTIMISED------------------------------\n");
 
     printf("\nRoutine1:");
@@ -127,7 +109,8 @@ int main() {
     
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
-
+    std::copy(y, y + M, y_copy); // Assuming M is the number of elements in y
+    
     initialize(); // reinitialise the arrays 
 
     printf("\nRoutine2:");
@@ -135,10 +118,11 @@ int main() {
 
     for (t = 0; t < TIMES2; t++)
         routine2(alpha, beta);
-
+    
     
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
+    std::copy(w, w + N, w_copy); // copy routine2 to test comparison with vectorised version, w+N to check for last element
 
     initialize(); // reinitialise arrays 
 
@@ -152,17 +136,11 @@ int main() {
 
     for (t = 0; t < TIMES1; t++) // for loop to execute routine1 TIMES1 times
         routine1_vec(alpha, beta); // init with alpha and beta
-    memcpy(y_copy, y, M * sizeof(float)); // copy routine1 to test comparison with vectorised version
+
+    // y now becomes what the vectorised version of routine1 has calculated
 
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
-
-    if (compare_arrays_one(y, y_copy, M)) {
-        printf("Routine1_vec: Results match.\n");
-    }
-    else {
-        printf("Routine1_vec: Results do not match!\n");
-    }
 
     initialize(); // reinitialise the arrays
 
@@ -172,24 +150,53 @@ int main() {
     for (t = 0; t < TIMES2; t++)
         routine2_vec(alpha, beta);
 
-    memcpy(w_copy, w, N * sizeof(float));
+    // w now becomes what the vectorised version of routine2 has calculated
 
-    
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
-    
-    // printf("\n-----------------TESTING------------------------------\n\n");
-    if (compare_arrays_two(w, w_copy, N)) {
-        printf("Routine2_vec: Results match.\n");
+
+
+
+    printf("\n-----------------TESTING------------------------------\n\n");
+
+    bool arraysAreEqual; // boolean to check if arrays are equal
+
+    arraysAreEqual = false;
+    for (int i = 0; i < M; i++) {
+        if (equal(y_copy[i], y[i])) { // Use the equal function to compare elements
+            arraysAreEqual = true;
+            break;
+        }
+    }
+
+    if (arraysAreEqual) {
+        printf("Routine1_vec: Results match.\n");
     }
     else {
-        printf("Routine2_vec: Results do not match!\n");
+        printf("Routine1_vec: Results do not match!\n");
     }
 
+    arraysAreEqual = false;
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+			if (equal(w_copy[i], w[i])) { // Use the equal function to compare elements
+            	arraysAreEqual = true;
+            	break;
+            }
+		}
+    }
 
+    if (arraysAreEqual) {
+		printf("Routine2_vec: Results match.\n");
+	}
+    else {
+        printf("Routine2_vec: Results do not match!\n");
+
+    }
 
     return 0; // return 0 to indicate that program has finished successfully
 }
+
 void initialize() {
 
     unsigned int i, j;
@@ -227,21 +234,14 @@ void routine1(float alpha, float beta) { // routine1: y[i] = alpha * y[i] + beta
 
 void routine1_vec(float alpha, float beta) {
 
-    // routine1: y[i] = (alpha * y[i]) + (beta * z[i]);
-
     unsigned int i; // loop counter
 
     // Create AVX vectors for alpha and beta
     __m256 alpha_vec = _mm256_set1_ps(alpha); // set1_ps sets all elements of alpha to alpha_vec, which holds 8 elements
     __m256 beta_vec = _mm256_set1_ps(beta); // set1_ps sets all elements of beta to beta_vec, which holds 8 elements
-    /* 
-       
-       essentially there's 8 seperate float alpha = 0.023f, beta = 0.045f iterations in one iteration of the loop
-    
-       alpha_vec = |0.023|0.023|0.023|0.023|0.023|0.023|0.023|0.023|
-       beta_vec = |0.045|0.045|0.045|0.045|0.045|0.045|0.045|0.045|
+    // essentially there's 8 seperate float beta = 0.045f; iterations
+    // beta_vec = |0.045|0.045|0.045|0.045|0.045|0.045|0.045|0.045|
 
-    */
     // process 8 elements at a time for each iteration, until i reaches M
     for (i = 0; i < M; i += 8) {
 
@@ -250,9 +250,10 @@ void routine1_vec(float alpha, float beta) {
         __m256 z_vec = _mm256_load_ps(&z[i]); // load 8 seperate iterated elements from z into AVX register
 
         // Perform the vectorized operations
-        __m256 result_vec = _mm256_add_ps(_mm256_mul_ps(alpha_vec, y_vec), _mm256_mul_ps(beta_vec, z_vec));
+        __m256 result_vec = _mm256_add_ps(_mm256_mul_ps(alpha_vec, y_vec),_mm256_mul_ps(beta_vec, z_vec));
+        // result_vec = (alpha * y_vec) + (beta * z_vec)
 
-        // Store the results back into the y array
+    // Store the results back into the y array
         _mm256_store_ps(&y[i], result_vec);
     }
 
@@ -261,8 +262,15 @@ void routine1_vec(float alpha, float beta) {
 
 }
 
-
-
+// from lab-session:
+unsigned short int equal(float a, float b) {
+    float temp = a - b;
+    //printf("\n %f  %f", a, b);
+    if ((fabs(temp) / fabs(b)) < EPSILON)
+        return 0; //success
+    else
+        return 1; //wrong result
+}
 
 
 void routine2(float alpha, float beta) {
@@ -276,91 +284,102 @@ void routine2(float alpha, float beta) {
 
 }
 
-
-// Routine2:  2d i+j loop -> w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
-
 //void routine2_vec(float alpha, float beta) {
+//    unsigned int i, j;
 //
-//    unsigned int i = 0, j = 0;
-//
-//    // broardcast alpha and beta to all elements of 256-bit vectors
+//    // Broadcast alpha and beta to all elements of 256-bit vectors
 //    __m256 alpha_vec = _mm256_set1_ps(alpha);
 //    __m256 beta_vec = _mm256_set1_ps(beta);
 //
-//    __m256 a_vec = _mm256_set1_ps(A[i][j]);
-//    __m256 x_vec = _mm256_set1_ps(x[i]);
-//    __m256 w_vec = _mm256_set1_ps(w[i]);
+//    for (i = 0; i < N; i++) {
+//        // Start with w[i] and broadcast it to all elements of a vector
+//        __m256 w_vec = _mm256_set1_ps(w[i]);
 //
-//        for (i = 0; i < N; i++)
-//        {
-//            // init vector to accumulate results
-//            __m256 sum_vec = _mm256_setzero_ps(); // setzero_ps sets all elements of sum_vec to start at 0
+//        // Subtract beta from w[i]
+//        w_vec = _mm256_sub_ps(w_vec, beta_vec);
 //
-//            for (j = 0; j < N; j += 8) {
-//                // load 8 consecutive values from the matrix row and vector x
-//                __m256 a_vec = _mm256_load_ps(&A[i][j]);
-//                __m256 x_vec = _mm256_load_ps(&x[j]);
-//                __m256 w_vec = _mm256_load_ps(&w[i]);
-//                
-//                // __m256 w_vec = _mm256_broadcast_ss(&w[i]);
+//        // Initialize a vector to accumulate the results
+//        __m256 sum_vec = _mm256_setzero_ps();
 //
+//        for (j = 0; j < N; j += 8) {
+//            // Load 8 consecutive values from the matrix row and vector x
+//            __m256 a_vec = _mm256_load_ps(&A[i][j]);
+//            __m256 x_vec = _mm256_load_ps(&x[j]);
 //
-//                // perform calculation
-//                w_vec = _mm256_add_ps(_mm256_sub_ps(w_vec, beta_vec), _mm256_mul_ps(alpha_vec, _mm256_mul_ps(a_vec, x_vec)));
-//                // ^^^ w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]); ^^^
-//
-//                // store the results back into the w array
-//                _mm256_store_ps(&w[i], w_vec);
-//
-//            }
+//            // Perform the multiplication and accumulate the results
+//            sum_vec = _mm256_add_ps(sum_vec, _mm256_mul_ps(a_vec, x_vec));
 //        }
+//
+//        // Sum all elements of sum_vec into a single value
+//        sum_vec = _mm256_hadd_ps(sum_vec, sum_vec); // Horizontally add pairs of elements
+//        sum_vec = _mm256_hadd_ps(sum_vec, sum_vec); // Repeat to sum all elements
+//
+//        // Extract the final result from the sum_vec
+//        float temp[8]; // Temporary array to store the results
+//        _mm256_store_ps(temp, sum_vec);
+//
+//        // The horizontal add above has added pairs, and the result we need is in the first and fifth element
+//        w[i] = temp[0] + temp[4] * alpha - beta; // Add the accumulated sum to w[i] (accounting for the initial subtraction)
+//    }
 //}
 
 void routine2_vec(float alpha, float beta) {
 
-    unsigned int i = 0, j = 0; // init loop counters
+    unsigned int i = 0, j = 0; // init loop counters with 0 for i and j, 
 
-    // Broadcast variables to all elements of 256-bit vectors, replicate a single float value across all elements of each 256-bit vector
+    /*
+
+        set1_ps sets all elements of alpha and beta to a vector
+        which each hold 8 elements. It could also be said to broadcast the values
+        to all elements of the 256-bit vectors, you essentially replicate a
+        single float value across all elements of each 256 - bit vector
+
+    */
+
     __m256 alpha_vec = _mm256_set1_ps(alpha);
     __m256 beta_vec = _mm256_set1_ps(beta);
 
-    __m256 a_vec = _mm256_set1_ps(A[i][j]);
-    __m256 x_vec = _mm256_set1_ps(x[j]);
-    __m256 w_vec = _mm256_set1_ps(w[j]);
+    /*
+        
+        init before asigning values to vec_A, vec_B, vec_C,
+        these values are used for the calculations, so want to
+        be initialised before the loop?
 
-    __m256 vec_A;
-    __m256 vec_B;
-    __m256 vec_C;
+    */
 
-    for (i = 0; i < N; i++) { 
+    for (i = 0; i < N; i++) {
+        /*
+            
+            load in values for the 3 different looping variables, a_vec has a 2d-loop thus requires 'i' and 'j'
+        
+        */
+
+        __m256 a_vec = _mm256_set1_ps(A[i][j]);
+        __m256 x_vec = _mm256_set1_ps(x[j]);
+        __m256 w_vec = _mm256_set1_ps(w[j]);
+
         // outer loop for rows of matrix A and vector. 
         __m256 sum_vec = _mm256_setzero_ps(); // Initialise the accumulator vector as zero
 
-            
-
-
-        for (j = 0; j < N; j+=8) { 
-
-            
+        for (j = 0; j < N; j += 8) {
 
             __m256 a_vec = _mm256_load_ps(&A[i][j]); // Load elements from A
             __m256 w_vec = _mm256_load_ps(&w[i]); // Load elements from w
             __m256 x_vec = _mm256_load_ps(&x[j]); // Load elements from x
-           
 
-            alpha_vec = _mm256_load_ps(&alpha);
+
             beta_vec = _mm256_load_ps(&beta);
 
-            vec_A = _mm256_mul_ps(alpha_vec, a_vec); // Compute (alpha*A[i][j])
-            vec_B = _mm256_mul_ps(vec_A, x_vec); // Compute (vec_A) * x[j]
-            vec_C = _mm256_sub_ps(w_vec, beta_vec); // Compute (w[i] - b)
-            
+            __m256 vec_A = _mm256_mul_ps(alpha_vec, a_vec); // Compute (alpha*A[i][j])
+            __m256 vec_B = _mm256_mul_ps(vec_A, x_vec); // Compute (vec_A) * x[j]
+            __m256 vec_C = _mm256_sub_ps(w_vec, beta_vec); // Compute (w[i] - b)
+
             // Horizontal add to sum up elements of sum_vec
             sum_vec = _mm256_add_ps(vec_B, vec_C);
             //printf("sum_vec: %f\n", sum_vec); Can't print mm256 types
 
-            // Store the result back into the w array
-           
+            
+
 
             // (w[i] - beta) + ((alpha * A[i][j]) * x[j]);
 
@@ -374,6 +393,7 @@ void routine2_vec(float alpha, float beta) {
             */
         }
 
+        // Store calculations that're complete for 8 single-precision, floating-point values
         _mm256_store_ps(&w[i], sum_vec);
     }
 }
@@ -399,11 +419,11 @@ void routine2_vec(float alpha, float beta) {
 
 
 
-/* 
+/*
     Routine2:  2d i + j loop->w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
 
     // decleration of arrays and align as 64-bit
-    __declspec(align(64)) float  y[M], z[M]; 
+    __declspec(align(64)) float  y[M], z[M];
     __declspec(align(64)) float A[N][N], x[N], w[N];
 
 
@@ -415,45 +435,17 @@ void routine2_vec(float alpha, float beta) {
 
 
 
-//void routine2_vec(float alpha, float beta) {
-//    unsigned int i, j;
-//
-//    // Broadcast alpha to all elements of 256-bit vectors
-//    __m256 alpha_vec = _mm256_set1_ps(alpha);
-//
-//    for (i = 0; i < N; i++) {
-//        // Initialize a vector to accumulate the results
-//        __m256 sum_vec = _mm256_setzero_ps();
-//
-//        for (j = 0; j < N; j += 8) {
-//            // Load 8 consecutive values from the matrix row and vector x
-//            __m256 a_vec = _mm256_load_ps(&A[i][j]);
-//            __m256 x_vec = _mm256_load_ps(&x[j]);
-//
-//            // Perform the multiplication and accumulate the results
-//            sum_vec = _mm256_add_ps(sum_vec, _mm256_mul_ps(alpha_vec, _mm256_mul_ps(a_vec, x_vec)));
-//        }
-//
-//        // Reduce the vector sum_vec to a single scalar sum
-//        sum_vec = _mm256_hadd_ps(sum_vec, sum_vec); // Horizontally add pairs of elements
-//        sum_vec = _mm256_hadd_ps(sum_vec, sum_vec); // Repeat to sum all elements
-//
-//        // Move the high 128 bits of sum_vec to low 128 bits and add them to the low 128 bits
-//        __m256 permuted = _mm256_permute2f128_ps(sum_vec, sum_vec, 0x1);
-//        sum_vec = _mm256_add_ps(sum_vec, permuted);
-//
-//        // Now the total sum is in the first element of sum_vec
-//        __m128 low128 = _mm256_castps256_ps128(sum_vec);
-//        __m128 high64 = _mm_movehl_ps(low128, low128); // Move high 64 bits to low 64 bits and add
-//        low128 = _mm_add_ps(low128, high64);
-//        high64 = _mm_movehdup_ps(low128); // Duplicate high 32 bits in low 64 bits and add
-//        low128 = _mm_add_ss(low128, high64);
-//
-//        // The horizontal add above has summed all the elements, now subtract beta and store the result
-//        float final_result = _mm_cvtss_f32(low128) - beta;
-//        w[i] = final_result;
-//    }
-//}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

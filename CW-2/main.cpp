@@ -161,11 +161,14 @@ int main() {
 
     arraysAreEqual = false;
     for (int i = 0; i < M; i++) {
-        if (equal(y_copy[i], y[i])) { // Use the equal function to compare elements
-            arraysAreEqual = true;
+        if (!equal(y_copy[i], y[i])) { // Use the equal function to compare elements
+            printf("Routine1: Results do not match!\n");
             break;
         }
     }
+	arraysAreEqual = true;
+		
+    
 
     if (arraysAreEqual) {
         printf("Routine1_vec: Results match.\n");

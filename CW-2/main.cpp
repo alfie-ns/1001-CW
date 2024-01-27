@@ -191,7 +191,6 @@ int main() {
 	}
     else {
         printf("Routine2_vec: Results do not match!\n");
-
     }
 
     return 0; // return 0 to indicate that program has finished successfully

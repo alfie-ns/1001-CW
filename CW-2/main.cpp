@@ -67,7 +67,7 @@ int main() {
 
     double run_time; // double-type variable to store the execution time, for testing 
     double start_time; // double-type variable to store the start time, for testing
-
+    
     unsigned int t; // unsigned int-type variable to store the number of times the routines are executed    
 
     initialize(); // initialise the arrays
@@ -109,7 +109,7 @@ int main() {
     
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
-    std::copy(y, y + M, y_copy); // Assuming M is the number of elements in y
+    std::copy(y, y + M, y_copy); // copy routine1 to test comparison with vectorised version, y+M to check for last element
     
     initialize(); // reinitialise the arrays 
 
@@ -154,8 +154,6 @@ int main() {
 
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
-
-
 
     printf("\n-----------------TESTING------------------------------\n\n");
 

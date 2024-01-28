@@ -183,7 +183,7 @@ int main() {
     }
 	arraysAreEqual = true;
     if (arraysAreEqual) {
-        printf("Routine1_vec: Results match.\n");
+        printf("Routine1 <---> Routine1_vec: Results match.\n");
     }
     else {
         printf("Routine1_vec: Results do not match!\n");
@@ -199,7 +199,7 @@ int main() {
 		}
     }
     if (arraysAreEqual) {
-		printf("Routine2_vec: Results match.\n");
+		printf("Routine2 <---> Routine2_vec: Results match.\n");
 	}
     else {
         printf("Routine2_vec: Results do not match!\n");
@@ -233,6 +233,17 @@ void initialize() {
 
 }
 
+// from lab-session:
+unsigned short int equal(float a, float b) {
+    float temp = a - b;
+    //printf("\n %f  %f", a, b);
+    if ((fabs(temp) / fabs(b)) < EPSILON)
+        return 0; //success
+    else
+        return 1; //wrong result
+}
+
+
 /*
      ** AVX intrinsic Functions: **
 
@@ -259,7 +270,6 @@ void routine1(float alpha, float beta) { // routine1: y[i] = alpha * y[i] + beta
 }
 
 // AVX implementation of routine1
-
 void routine1_vec(float alpha, float beta) {
 
     unsigned int i; // loop counter, usigned so the computer knows it's not a negative number
@@ -287,17 +297,18 @@ void routine1_vec(float alpha, float beta) {
         _mm256_store_ps(&y[i], result_vec);
     }
 
-    // IS THIS NECCESSARY? [x]
    /* 
+        IS THIS NECCESSARY? [x]
+    
         for (i = M - (M % 8); i < M; i++) 
 		    y[i] = (alpha * y[i]) + (beta * z[i]); 
 
-        this was not neccesary because: M is a multiple of 8, so the loop will always end perfectly
+        this was not neccesary because: M is a multiple of 8, so the loop will always end-perfectly
    */
 }
 
 
-
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void routine2(float alpha, float beta) {
 
@@ -310,7 +321,7 @@ void routine2(float alpha, float beta) {
 
 }
 
-
+// AVX implementation of routine2
 void routine2_vec(float alpha, float beta) {
 
     unsigned int i = 0, j = 0; // init loop counters with 0 for i and j, 
@@ -320,22 +331,15 @@ void routine2_vec(float alpha, float beta) {
         set1_ps sets all elements of alpha and beta to a vector
         which each hold 8 elements. It could also be said to broadcast the values
         to all elements of the 256-bit vectors, you essentially replicate a
-        single float value across all elements of each 256 - bit vector
+        single float value across all elements of each 256-bit vector
 
     */
 
     __m256 alpha_vec = _mm256_set1_ps(alpha);
     __m256 beta_vec = _mm256_set1_ps(beta);
 
-    /*
-        
-        init before asigning values to vec_A, vec_B, vec_C,
-        these values are used for the calculations, so should
-        be initialised before the loop
+    for (i = 0; i < N; i++) { // outer-loop for rows of matrix A and vector.
 
-    */
-
-    for (i = 0; i < N; i++) {
         /*
             Initializes three 256-bit vectors, each vector set to its respective current
             values: A[i][j], x[j], and w[j], respectively, for parallel processing.
@@ -348,7 +352,7 @@ void routine2_vec(float alpha, float beta) {
         // outer loop for rows of matrix A and vector. 
         __m256 sum_vec = _mm256_setzero_ps(); // Initialise the accumulator vector as zero
 
-        for (j = 0; j < N; j += 8) {
+        for (j = 0; j < N; j += 8) { // vectorisation beins, process 8 elements at a time
 
             __m256 a_vec = _mm256_load_ps(&A[i][j]); // Load elements from A
             __m256 w_vec = _mm256_load_ps(&w[i]); // Load elements from w
@@ -381,15 +385,6 @@ void routine2_vec(float alpha, float beta) {
     }
 }
 
-// from lab-session:
-unsigned short int equal(float a, float b) {
-    float temp = a - b;
-    //printf("\n %f  %f", a, b);
-    if ((fabs(temp) / fabs(b)) < EPSILON)
-        return 0; //success
-    else
-        return 1; //wrong result
-}
 
 
 

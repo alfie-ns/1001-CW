@@ -48,10 +48,10 @@ unsigned short int equal(float a, float b); // function to check equality within
     N is the size of the arrays for routine2
 
     [x] TODO: Make routine2_vec
-    [x] TODO: TEST IF VECTORISED CALCULATIONS = NON-OPTIMISED VERSION WITH COMPARE FUNCTION
-    [x] RESULTS DO NOT MATCH. it must be the compare function because routine1 must be the same
+    [x] TODO: TEST IF VECTORISED CALCULATIONS = NON-OPTIMISED VERSION WITH EQUAL FUNCTION
+    [x] RESULTS DO NOT MATCH. 
 
-    git still tracks my .vs folder even though i have .vs/ in my .gitignore file
+    git still tracks my .vs folder even though i have .vs/ in my .gitignore file, maybe as it was there from the start?
 */
 
 __declspec(align(64)) float  y[M], z[M]; // declare arrays as 64-byte aligned
@@ -137,7 +137,7 @@ int main() {
     for (t = 0; t < TIMES1; t++) // for loop to execute routine1 TIMES1 times
         routine1_vec(alpha, beta); // init with alpha and beta
 
-    // y now becomes what the vectorised version of routine1 has calculated
+    // y, a global declared 64-bit float, now becomes what the vectorised version of routine1 has calculated
 
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
@@ -157,7 +157,7 @@ int main() {
 
     printf("\n-----------------TESTING------------------------------\n\n");
 
-    bool arraysAreEqual; // boolean to check if arrays are equal
+    bool arraysAreEqual; // bool value to check if arrays are equal
 
     arraysAreEqual = false;
     for (int i = 0; i < M; i++) {
@@ -165,18 +165,17 @@ int main() {
             printf("Routine1: Results do not match!\n");
             break;
         }
+        else {
+			arraysAreEqual = true;
+		}
     }
 	arraysAreEqual = true;
-		
-    
-
     if (arraysAreEqual) {
         printf("Routine1_vec: Results match.\n");
     }
     else {
         printf("Routine1_vec: Results do not match!\n");
     }
-
     arraysAreEqual = false;
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
@@ -184,9 +183,9 @@ int main() {
             	arraysAreEqual = true;
             	break;
             }
+            
 		}
     }
-
     if (arraysAreEqual) {
 		printf("Routine2_vec: Results match.\n");
 	}
@@ -222,6 +221,23 @@ void initialize() {
 
 }
 
+/*
+     ** AVX intrinsic Functions: **
+
+       __m256: means a 256-bit variable that can hold eight 32-bit single-precision floating-point values.
+       _mm256_load_ps: loads eight 32-bit single-precision floating-point values.
+       _mm256_store_ps: stores eight 32-bit single-precision floating-point values into memory.
+       _mm256_add_ps: adds eight 32-bit single-precision floating-point values.
+       _mm256_sub_ps: subtracts eight 32-bit single-precision floating-point values.
+       _mm256_mul_ps: multiplies eight 32-bit single-precision floating-point values
+       _mm256_setzero_ps: initializes all elements of this 256-bit vector to zero.
+       _mm256_set1_ps: initializes all elements of this 256-bit vector with the same single-precision floating-point value.
+       _mm256_fmad_ps: performs a fused multiply-add operation on eight 32-bit single-precision floating-point values.
+       _mm256_hadd_ps: horizontally adds adjacent pairs of 32-bit single-precision floating-point values.
+
+ */
+
+
 void routine1(float alpha, float beta) { // routine1: y[i] = alpha * y[i] + beta * z[i];
 
     unsigned int i; // loop counter
@@ -234,12 +250,14 @@ void routine1(float alpha, float beta) { // routine1: y[i] = alpha * y[i] + beta
 
 void routine1_vec(float alpha, float beta) {
 
-    unsigned int i; // loop counter
+    unsigned int i; // loop counter, usigned so the computer knows it's not a negative number
 
     // Create AVX vectors for alpha and beta
     __m256 alpha_vec = _mm256_set1_ps(alpha); // set1_ps sets all elements of alpha to alpha_vec, which holds 8 elements
     __m256 beta_vec = _mm256_set1_ps(beta); // set1_ps sets all elements of beta to beta_vec, which holds 8 elements
-    // essentially there's 8 seperate float beta = 0.045f; iterations
+
+    // there's 8 seperate floats, alpha_vec and beta_vec hold 8 elements each:
+    // alpha_vec = |0.023|0.023|0.023|0.023|0.023|0.023|0.023|0.023|
     // beta_vec = |0.045|0.045|0.045|0.045|0.045|0.045|0.045|0.045|
 
     // process 8 elements at a time for each iteration, until i reaches M
@@ -253,24 +271,20 @@ void routine1_vec(float alpha, float beta) {
         __m256 result_vec = _mm256_add_ps(_mm256_mul_ps(alpha_vec, y_vec),_mm256_mul_ps(beta_vec, z_vec));
         // result_vec = (alpha * y_vec) + (beta * z_vec)
 
-    // Store the results back into the y array
+        // Store the results back into the y array
         _mm256_store_ps(&y[i], result_vec);
     }
 
     // IS THIS NECCESSARY? [x]
-    // No because M is a multiple of 8, so the loop will always be executed?
+   /* 
+        for (i = M - (M % 8); i < M; i++) 
+		    y[i] = (alpha * y[i]) + (beta * z[i]); 
 
+        this was not neccesary because: M is a multiple of 8, so the loop will always end perfectly
+   */
 }
 
-// from lab-session:
-unsigned short int equal(float a, float b) {
-    float temp = a - b;
-    //printf("\n %f  %f", a, b);
-    if ((fabs(temp) / fabs(b)) < EPSILON)
-        return 0; //success
-    else
-        return 1; //wrong result
-}
+
 
 
 void routine2(float alpha, float beta) {
@@ -284,44 +298,6 @@ void routine2(float alpha, float beta) {
 
 }
 
-//void routine2_vec(float alpha, float beta) {
-//    unsigned int i, j;
-//
-//    // Broadcast alpha and beta to all elements of 256-bit vectors
-//    __m256 alpha_vec = _mm256_set1_ps(alpha);
-//    __m256 beta_vec = _mm256_set1_ps(beta);
-//
-//    for (i = 0; i < N; i++) {
-//        // Start with w[i] and broadcast it to all elements of a vector
-//        __m256 w_vec = _mm256_set1_ps(w[i]);
-//
-//        // Subtract beta from w[i]
-//        w_vec = _mm256_sub_ps(w_vec, beta_vec);
-//
-//        // Initialize a vector to accumulate the results
-//        __m256 sum_vec = _mm256_setzero_ps();
-//
-//        for (j = 0; j < N; j += 8) {
-//            // Load 8 consecutive values from the matrix row and vector x
-//            __m256 a_vec = _mm256_load_ps(&A[i][j]);
-//            __m256 x_vec = _mm256_load_ps(&x[j]);
-//
-//            // Perform the multiplication and accumulate the results
-//            sum_vec = _mm256_add_ps(sum_vec, _mm256_mul_ps(a_vec, x_vec));
-//        }
-//
-//        // Sum all elements of sum_vec into a single value
-//        sum_vec = _mm256_hadd_ps(sum_vec, sum_vec); // Horizontally add pairs of elements
-//        sum_vec = _mm256_hadd_ps(sum_vec, sum_vec); // Repeat to sum all elements
-//
-//        // Extract the final result from the sum_vec
-//        float temp[8]; // Temporary array to store the results
-//        _mm256_store_ps(temp, sum_vec);
-//
-//        // The horizontal add above has added pairs, and the result we need is in the first and fifth element
-//        w[i] = temp[0] + temp[4] * alpha - beta; // Add the accumulated sum to w[i] (accounting for the initial subtraction)
-//    }
-//}
 
 void routine2_vec(float alpha, float beta) {
 
@@ -342,16 +318,15 @@ void routine2_vec(float alpha, float beta) {
     /*
         
         init before asigning values to vec_A, vec_B, vec_C,
-        these values are used for the calculations, so want to
-        be initialised before the loop?
+        these values are used for the calculations, so should
+        be initialised before the loop
 
     */
 
     for (i = 0; i < N; i++) {
         /*
-            
-            load in values for the 3 different looping variables, a_vec has a 2d-loop thus requires 'i' and 'j'
-        
+            Initializes three 256-bit vectors, each vector set to its respective current
+            values: A[i][j], x[j], and w[j], respectively, for parallel processing.
         */
 
         __m256 a_vec = _mm256_set1_ps(A[i][j]);
@@ -367,30 +342,26 @@ void routine2_vec(float alpha, float beta) {
             __m256 w_vec = _mm256_load_ps(&w[i]); // Load elements from w
             __m256 x_vec = _mm256_load_ps(&x[j]); // Load elements from x
 
+            /*
+             
+               (w[i] - beta) + ((alpha * A[i][j]) * x[j]);
+                Order of Operations:
 
-            beta_vec = _mm256_load_ps(&beta);
+                1. A = alpha*A[i][j] 
+                2. B = A*x[j] 
+                3. C = (w[i]-beta) 
+                4. sum_vec = B+C
+
+                ^^This is process happens 8-times in a single-iteration^^
+
+            */
 
             __m256 vec_A = _mm256_mul_ps(alpha_vec, a_vec); // Compute (alpha*A[i][j])
             __m256 vec_B = _mm256_mul_ps(vec_A, x_vec); // Compute (vec_A) * x[j]
             __m256 vec_C = _mm256_sub_ps(w_vec, beta_vec); // Compute (w[i] - b)
 
-            // Horizontal add to sum up elements of sum_vec
+            // sum up elements 8 times in a single-iteration 
             sum_vec = _mm256_add_ps(vec_B, vec_C);
-            //printf("sum_vec: %f\n", sum_vec); Can't print mm256 types
-
-            
-
-
-            // (w[i] - beta) + ((alpha * A[i][j]) * x[j]);
-
-            /*
-                Order of Operations:
-
-                1. alpha*A[i][j] - A
-                2. A *x[j] - B
-                3. (w[i] - beta) - C
-                4. B+C - D
-            */
         }
 
         // Store calculations that're complete for 8 single-precision, floating-point values
@@ -398,40 +369,15 @@ void routine2_vec(float alpha, float beta) {
     }
 }
 
-
-
-
-/*
-     ** AVX intrinsic Functions: **
-
-       __m256: means a 256-bit variable that can hold eight 32-bit single-precision floating-point values.
-       _mm256_load_ps: loads eight 32-bit single-precision floating-point values.
-       _mm256_store_ps: stores eight 32-bit single-precision floating-point values into memory.
-       _mm256_add_ps: adds eight 32-bit single-precision floating-point values.
-       _mm256_sub_ps: subtracts eight 32-bit single-precision floating-point values.
-       _mm256_mul_ps: multiplies eight 32-bit single-precision floating-point values
-       _mm256_setzero_ps: initializes all elements of this 256-bit vector to zero.
-       _mm256_set1_ps: initializes all elements of this 256-bit vector with the same single-precision floating-point value.
-       _mm256_fmad_ps: performs a fused multiply-add operation on eight 32-bit single-precision floating-point values.
-       _mm256_hadd_ps: horizontally adds adjacent pairs of 32-bit single-precision floating-point values.
-
-   /*
-
-
-
-/*
-    Routine2:  2d i + j loop->w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
-
-    // decleration of arrays and align as 64-bit
-    __declspec(align(64)) float  y[M], z[M];
-    __declspec(align(64)) float A[N][N], x[N], w[N];
-
-
-
-*/
-
-
-
+// from lab-session:
+unsigned short int equal(float a, float b) {
+    float temp = a - b;
+    //printf("\n %f  %f", a, b);
+    if ((fabs(temp) / fabs(b)) < EPSILON)
+        return 0; //success
+    else
+        return 1; //wrong result
+}
 
 
 

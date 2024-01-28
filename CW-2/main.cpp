@@ -68,7 +68,11 @@ int main() {
     double run_time; // double-type variable to store the execution time, for testing 
     double start_time; // double-type variable to store the start time, for testing
     
-    unsigned int t; // unsigned int-type variable to store the number of times the routines are executed    
+    unsigned int t; // unsigned int-type variable to store the number of times the routines are executed
+
+    // double-type speedup variables to store the speedup of the vectorised versions vs the routines
+    double non_optimized_time1, optimized_time1, speedup1;
+    double non_optimized_time2, optimized_time2, speedup2;
 
     initialize(); // initialise the arrays
 
@@ -110,7 +114,8 @@ int main() {
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
     std::copy(y, y + M, y_copy); // copy routine1 to test comparison with vectorised version, y+M to check for last element
-    
+    non_optimized_time1 = omp_get_wtime() - start_time; // store the time-of non-optimised version of routine1
+
     initialize(); // reinitialise the arrays 
 
     printf("\nRoutine2:");
@@ -123,6 +128,7 @@ int main() {
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
     std::copy(w, w + N, w_copy); // copy routine2 to test comparison with vectorised version, w+N to check for last element
+    non_optimized_time2 = omp_get_wtime() - start_time; // store the time-of non-optimised version of routine2
 
     initialize(); // reinitialise arrays 
 
@@ -141,6 +147,7 @@ int main() {
 
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
+    optimized_time1 = omp_get_wtime() - start_time; // store the time taken for the vectorised version of routine1
 
     initialize(); // reinitialise the arrays
 
@@ -154,8 +161,13 @@ int main() {
 
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
+    optimized_time2 = omp_get_wtime() - start_time; // store the time taken for the vectorised version of routine2
 
-    printf("\n-----------------TESTING------------------------------\n\n");
+    printf("\n-----------------RESULTS------------------------------\n");
+    speedup1 = non_optimized_time1 / optimized_time1; // calculate speedup for routine1
+    printf("\nSpeedup for Routine1: %f times", speedup1);
+    speedup2 = non_optimized_time2 / optimized_time2; // calculate speedup for routine2
+    printf("\nSpeedup for Routine2: %f times\n\n", speedup2);
 
     bool arraysAreEqual; // bool value to check if arrays are equal
 

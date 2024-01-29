@@ -37,71 +37,26 @@ void routine2(float alpha, float beta); // calls routine2 with alpha and beta
 void routine1_vec(float alpha, float beta); // calls routine1_vec with alpha and beta
 void routine2_vec(float alpha, float beta); // calls routine2_vec with alpha and beta
 
-unsigned short int equal(float a, float b); // function to check equality within tolerance
-/*
-    Routine1: y[i] = (alpha * y[i]) + (beta * z[i]);
-    Routine2: w[i] = w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
-
-    declspec(align(64)) is used to align the arrays to 64-byte boundaries
-
-    M is the size of the arrays for routine1
-    N is the size of the arrays for routine2
-
-    [x] TODO: Make routine2_vec
-    [x] TODO: TEST IF VECTORISED CALCULATIONS = NON-OPTIMISED VERSION WITH EQUAL FUNCTION
-    [x] RESULTS DO NOT MATCH. 
-
-    git still tracks my .vs folder even though i have .vs/ in my .gitignore file, maybe as it was there from the start?
-*/
-
 __declspec(align(64)) float  y[M], z[M]; // declare arrays as 64-byte aligned
 __declspec(align(64)) float A[N][N], x[N], w[N]; // declare arrays as 64-byte aligned
 
 __declspec(align(64)) float y_copy[M]; // declare array that holds cloned y array for testing
 __declspec(align(64)) float w_copy[N]; // declare array that holds cloned w array for testing
 
+unsigned short int equal(float a, float b); // function to check equality within tolerance
+
+
 int main() {
 
     float alpha = 0.023f; // float value of 0.023 for beta alpha variable
     float beta = 0.045f; // float value of 0.045 for float beta variable
 
-    double run_time; // double-type variable to store the execution time, for testing 
-    double start_time; // double-type variable to store the start time, for testing
+    double run_time; // double variable to store the execution time, for testing 
+    double start_time; // double variable to store the start time, for testing
     
-    unsigned int t; // unsigned int-type variable to store the number of times the routines are executed
-
-    // double-type speedup variables to store the speedup of the vectorised versions vs the routines
-    double non_optimized_time1, optimized_time1, speedup1;
-    double non_optimized_time2, optimized_time2, speedup2;
+    unsigned int t; // unsigned int variable to store the number of times the routines are executed
 
     initialize(); // initialise the arrays
-
-
-
-
-    /*
-
-    EXAMPLE FROM LAB-SESSION:
-    
-    unsigned short int ConstAdd_AVX() {
-
-	    __m256  ymm1, ymm2, ymm3;
-	    int i;
-
-	    ymm1 = _mm256_set_ps(2.1234f, 2.1234f, 2.1234f, 2.1234f, 2.1234f, 2.1234f, 2.1234f, 2.1234f); //set num1 values
-	    for (i = 0; i < M; i += 8) { //IMPORTANT: M MUST BE A MULTIPLE OF 8, OTHERWISE IT DOES NOT WORK
-		    ymm2 = _mm256_loadu_ps(&V2[i]); //load 8 elements of X2[]
-		    ymm3 = _mm256_add_ps(ymm1, ymm2); //num3 = num1 + num2
-		    _mm256_storeu_ps(&V1[i], ymm3); //store num3 to Y[i]. num3 has 8 FP values which they are stored into Y[i], Y[i+1], Y[i+2], Y[i+3], .. Y[i+7]
-	    }
-
-
-	    return 2;
-    }
-    
-    */
-
-
 
     printf("\n-----------------NON-OPTIMISED------------------------------\n");
 
@@ -114,7 +69,6 @@ int main() {
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
     std::copy(y, y + M, y_copy); // copy routine1 to test comparison with vectorised version, y+M to check for last element
-    non_optimized_time1 = omp_get_wtime() - start_time; // store the time-of non-optimised version of routine1
 
     initialize(); // reinitialise the arrays 
 
@@ -128,14 +82,10 @@ int main() {
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
     std::copy(w, w + N, w_copy); // copy routine2 to test comparison with vectorised version, w+N to check for last element
-    non_optimized_time2 = omp_get_wtime() - start_time; // store the time-of non-optimised version of routine2
-
+    
     initialize(); // reinitialise arrays 
 
     printf("\n-----------------VECTORISED------------------------------\n");
-
-    // [x] make copies before running vectorised versions
-
 
     printf("\nRoutine1_vec:");
     start_time = omp_get_wtime(); //start timer
@@ -143,12 +93,10 @@ int main() {
     for (t = 0; t < TIMES1; t++) // for loop to execute routine1 TIMES1 times
         routine1_vec(alpha, beta); // init with alpha and beta
 
-    // y, a global declared 64-bit float, now becomes what the vectorised version of routine1 has calculated
 
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
-    optimized_time1 = omp_get_wtime() - start_time; // store the time taken for the vectorised version of routine1
-
+    
     initialize(); // reinitialise the arrays
 
     printf("\nRoutine2_vec:");
@@ -157,19 +105,16 @@ int main() {
     for (t = 0; t < TIMES2; t++)
         routine2_vec(alpha, beta);
 
-    // w now becomes what the vectorised version of routine2 has calculated
+    // w an array of size M, w_copy is a copy of w, w_copy+M to know when to stop copying
 
     run_time = omp_get_wtime() - start_time; //end timer
-    printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
-    optimized_time2 = omp_get_wtime() - start_time; // store the time taken for the vectorised version of routine2
+    printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // 
 
-    printf("\n-----------------RESULTS------------------------------\n");
-    speedup1 = non_optimized_time1 / optimized_time1; // calculate speedup for routine1
-    printf("\nSpeedup for Routine1: %f times", speedup1);
-    speedup2 = non_optimized_time2 / optimized_time2; // calculate speedup for routine2
-    printf("\nSpeedup for Routine2: %f times\n\n", speedup2);
+    printf("\n");
 
-    bool arraysAreEqual; // bool value to check if arrays are equal
+    printf("-----------------TESTING------------------------------\n\n");
+
+    bool arraysAreEqual; // switch to check if arrays are equal
 
     arraysAreEqual = false;
     for (int i = 0; i < M; i++) {
@@ -181,16 +126,15 @@ int main() {
 			arraysAreEqual = true;
 		}
     }
-	arraysAreEqual = true;
     if (arraysAreEqual) {
-        printf("Routine1 <---> Routine1_vec: Results match.\n");
+        printf("Routine1 <-> Routine1_vec. Results match.\n");
     }
     else {
-        printf("Routine1_vec: Results do not match!\n");
+        printf("CRITICAL ERROR\n");
     }
     arraysAreEqual = false;
     for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
+        for (int j = 0; j < N; j++) { // 2d array iteration
 			if (equal(w_copy[i], w[i])) { // Use the equal function to compare elements
             	arraysAreEqual = true;
             	break;
@@ -199,7 +143,7 @@ int main() {
 		}
     }
     if (arraysAreEqual) {
-		printf("Routine2 <---> Routine2_vec: Results match.\n");
+		printf("Routine2 <-> Routine2_vec: Results match.\n");
 	}
     else {
         printf("Routine2_vec: Results do not match!\n");
@@ -207,7 +151,46 @@ int main() {
 
     return 0; // return 0 to indicate that program has finished successfully
 }
+/*
+    
+    Routine1: y[i] = (alpha * y[i]) + (beta * z[i]);
+    Routine2: w[i] = w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
 
+    declspec(align(64)) is used to align the arrays to 64-byte boundaries
+
+    M is the size of the arrays for routine1
+    N is the size of the arrays for routine2
+
+    {x} Make routine1_vec
+    [x] Make routine2_vec
+    [x] Make copies of y and w arrays before running vectorised versions, for testing
+    [x] RESULTS DO NOT MATCH.
+
+    Hi, I apologies for not attending mant lectures, it was an embarrassingly
+    foolish thing to do, learning all of this last-minute was the hardest thing
+    I've ever done, however it was a prestige coursework, intrinsics
+    is an excellent fun approach to showing understanding of how a computer thinks. 
+    
+    I'm embarrsed for not coming to lectures, I may see you
+    in year 3 optional modules, and will be at all
+    lectures and labs.
+
+    https://github.com/alfie-ns/1001-q1
+
+    ** AVX intrinsic Functions: **
+
+    __m256: means a 256-bit variable that can hold eight 32-bit single-precision floating-point values.
+    _mm256_load_ps: loads eight 32-bit single-precision floating-point values.
+    _mm256_store_ps: stores eight 32-bit single-precision floating-point values into memory.
+    _mm256_add_ps: adds eight 32-bit single-precision floating-point values.
+    _mm256_sub_ps: subtracts eight 32-bit single-precision floating-point values.
+    _mm256_mul_ps: multiplies eight 32-bit single-precision floating-point values
+    _mm256_setzero_ps: initializes all elements of this 256-bit vector to zero.
+    _mm256_set1_ps: initializes all elements of this 256-bit vector with the same single-precision floating-point value.
+    _mm256_fmad_ps: performs a fused multiply-add operation on eight 32-bit single-precision floating-point values.
+    _mm256_hadd_ps: horizontally adds adjacent pairs of 32-bit single-precision floating-point values.
+
+ */
 void initialize() {
 
     unsigned int i, j;
@@ -244,22 +227,9 @@ unsigned short int equal(float a, float b) {
 }
 
 
-/*
-     ** AVX intrinsic Functions: **
 
-       __m256: means a 256-bit variable that can hold eight 32-bit single-precision floating-point values.
-       _mm256_load_ps: loads eight 32-bit single-precision floating-point values.
-       _mm256_store_ps: stores eight 32-bit single-precision floating-point values into memory.
-       _mm256_add_ps: adds eight 32-bit single-precision floating-point values.
-       _mm256_sub_ps: subtracts eight 32-bit single-precision floating-point values.
-       _mm256_mul_ps: multiplies eight 32-bit single-precision floating-point values
-       _mm256_setzero_ps: initializes all elements of this 256-bit vector to zero.
-       _mm256_set1_ps: initializes all elements of this 256-bit vector with the same single-precision floating-point value.
-       _mm256_fmad_ps: performs a fused multiply-add operation on eight 32-bit single-precision floating-point values.
-       _mm256_hadd_ps: horizontally adds adjacent pairs of 32-bit single-precision floating-point values.
 
- */
-
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void routine1(float alpha, float beta) { // routine1: y[i] = alpha * y[i] + beta * z[i];
 
@@ -278,7 +248,6 @@ void routine1_vec(float alpha, float beta) {
     __m256 alpha_vec = _mm256_set1_ps(alpha); // set1_ps sets all elements of alpha to alpha_vec, which holds 8 elements
     __m256 beta_vec = _mm256_set1_ps(beta); // set1_ps sets all elements of beta to beta_vec, which holds 8 elements
 
-    // there's 8 seperate floats, alpha_vec and beta_vec hold 8 elements each:
     // alpha_vec = |0.023|0.023|0.023|0.023|0.023|0.023|0.023|0.023|
     // beta_vec = |0.045|0.045|0.045|0.045|0.045|0.045|0.045|0.045|
 
@@ -296,15 +265,6 @@ void routine1_vec(float alpha, float beta) {
         // Store the results back into the y array
         _mm256_store_ps(&y[i], result_vec);
     }
-
-   /* 
-        IS THIS NECCESSARY? [x]
-    
-        for (i = M - (M % 8); i < M; i++) 
-		    y[i] = (alpha * y[i]) + (beta * z[i]); 
-
-        this was not neccesary because: M is a multiple of 8, so the loop will always end-perfectly
-   */
 }
 
 
@@ -330,7 +290,7 @@ void routine2_vec(float alpha, float beta) {
 
         set1_ps sets all elements of alpha and beta to a vector
         which each hold 8 elements. It could also be said to broadcast the values
-        to all elements of the 256-bit vectors, you essentially replicate a
+        to all elements of the 256-bit vector, you replicate a
         single float value across all elements of each 256-bit vector
 
     */
@@ -342,7 +302,7 @@ void routine2_vec(float alpha, float beta) {
 
         /*
             Initializes three 256-bit vectors, each vector set to its respective current
-            values: A[i][j], x[j], and w[j], respectively, for parallel processing.
+            values: A[i][j], x[j], and w[j], for parallel processing.
         */
 
         __m256 a_vec = _mm256_set1_ps(A[i][j]);
@@ -371,9 +331,9 @@ void routine2_vec(float alpha, float beta) {
                 ^^This is process happens 8-times in a single-iteration^^
 
             */
-
-            __m256 vec_A = _mm256_mul_ps(alpha_vec, a_vec); // Compute (alpha*A[i][j])
-            __m256 vec_B = _mm256_mul_ps(vec_A, x_vec); // Compute (vec_A) * x[j]
+          
+            __m256 vec_A = _mm256_mul_ps(alpha_vec, a_vec); // (alpha*A[i][j])
+            __m256 vec_B = _mm256_mul_ps(vec_A, x_vec); // (vec_A) * x[j]
             __m256 vec_C = _mm256_sub_ps(w_vec, beta_vec); // Compute (w[i] - b)
 
             // sum up elements 8 times in a single-iteration 
@@ -385,7 +345,7 @@ void routine2_vec(float alpha, float beta) {
     }
 }
 
-
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 

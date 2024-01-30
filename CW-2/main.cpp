@@ -129,9 +129,6 @@ int main() {
     if (arraysAreEqual) {
         printf("Routine1 <-> Routine1_vec. Results match.\n");
     }
-    else {
-        printf("CRITICAL ERROR\n");
-    }
     arraysAreEqual = false;
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) { // 2d array iteration

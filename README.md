@@ -10,7 +10,6 @@
 - [x] make routine2_vec
 - [x] make comparison-functionality
 - [x] get copy from normal functions and use that in comparison-funciton
-- [x] compile q2
 
 ## AVX
 

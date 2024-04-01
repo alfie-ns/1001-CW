@@ -4,7 +4,6 @@
 g++ -o q3 ../../q3/main_linux.cpp -lm # -lm for math libary
 
 # create variables to hold the image locations.  Use the full path name for each image.
-
 input_image=../../q3-images/input_images/a1.pgm
 blur_image=../../q3-images/output_images/blurred.pgm
 edge_image=../../q3-images/output_images/edge_detected.pgm

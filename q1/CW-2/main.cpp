@@ -29,7 +29,7 @@
 
 
 //function declarations
-void initialize(); // init function intializes the arrays
+void initialize(); // init function intialises the arrays
 
 void routine1(float alpha, float beta); // calls routine1 with alpha and beta
 void routine2(float alpha, float beta); // calls routine2 with alpha and beta
@@ -278,6 +278,13 @@ void routine2(float alpha, float beta) {
 
 }
 
+/*
+[[ ]] 
+[ ] First, you needed to use hadd instruction so as to add all the values in sum_vec.
+[ ] Second, you needed to load/store one element of w[i] not eight. Right now you store 8 elements in memory and you overwrite the output; this is problematic in the last 7 iterations as you store outside of the array's bounds.
+[ ] Furthermore, you did not take into account the case where N%8 is not zero.
+*/
+
 // AVX implementation of routine2
 void routine2_vec(float alpha, float beta) {
 
@@ -298,7 +305,7 @@ void routine2_vec(float alpha, float beta) {
     for (i = 0; i < N; i++) { // outer-loop for rows of matrix A and vector.
 
         /*
-            Initializes three 256-bit vectors, each vector set to its respective current
+            Initialises three 256-bit vectors, each vector set to its respective current
             values: A[i][j], x[j], and w[j], for parallel processing.
         */
 

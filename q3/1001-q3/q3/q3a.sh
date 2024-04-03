@@ -19,5 +19,5 @@ edge_image=../../q3-images/output_images/edge_detected.pgm
         main_linux.cpp for the linux-type main.cpp file thats succesfully compiled in linux.
         specify math libary use with -lm
 
-        create variables to hold image locations, to enter lniux
+        create variables to hold image locations for input, blur and edge images.
 END

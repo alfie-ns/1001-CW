@@ -96,6 +96,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Output Images Directory: " << outputDirectoryPath << std::endl;
 
     // loop through all files in the input directory
+    // define the entry as a directory iterator, auto& means the type is automatically deduced
     for (const auto& entry : std::filesystem::directory_iterator(inputDirectoryPath)) {
         std::string filename = entry.path().filename(); // sets filename to the current file
 
@@ -139,7 +140,7 @@ int main(int argc, char* argv[]) {
         deleteArrays(); //free memory
     }
 
-    return 0;
+    return 0; //end of the program
 
 }
 

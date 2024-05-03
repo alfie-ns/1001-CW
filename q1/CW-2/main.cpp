@@ -258,6 +258,7 @@ void routine1_vec(float alpha, float beta) {
         // Perform the vectorized operations
         __m256 result_vec = _mm256_add_ps(_mm256_mul_ps(alpha_vec, y_vec),_mm256_mul_ps(beta_vec, z_vec));
         // result_vec = (alpha * y_vec) + (beta * z_vec)
+        // This is done for 8 elements at a time^
 
         // Store the results back into the y array
         _mm256_store_ps(&y[i], result_vec);
@@ -278,12 +279,6 @@ void routine2(float alpha, float beta) {
 
 }
 
-/*
-[[ ]] 
-[ ] First, you needed to use hadd instruction so as to add all the values in sum_vec.
-[ ] Second, you needed to load/store one element of w[i] not eight. Right now you store 8 elements in memory and you overwrite the output; this is problematic in the last 7 iterations as you store outside of the array's bounds.
-[ ] Furthermore, you did not take into account the case where N%8 is not zero.
-*/
 
 // AVX implementation of routine2
 void routine2_vec(float alpha, float beta) {
@@ -347,6 +342,60 @@ void routine2_vec(float alpha, float beta) {
         // Store calculations that're complete for 8 single-precision, floating-point values
         _mm256_store_ps(&w[i], sum_vec);
     }
+    
+    /*
+    [[ ]]
+    [ ] First, you needed to use hadd instruction so as to add all the values in sum_vec.
+    [ ] Second, you needed to load/store one element of w[i] not eight. Right now you store 8 elements in memory and you overwrite the output; this is problematic in the last 7 iterations as you store outside of the array's bounds.
+    [ ] Furthermore, you did not take into account the case where N%8 is not zero.
+    */
+
+    
+    void routine2_vec(float alpha, float beta) {
+        unsigned int i = 0, j = 0; // init loop counters with 0 for i and j,
+
+        /* set1_ps sets all elements of alpha and beta to a vector which each hold 8 elements.
+           It could also be said to broadcast the values to all elements of the 256-bit vector,
+           you replicate a single float value across all elements of each 256-bit vector */
+        __m256 alpha_vec = _mm256_set1_ps(alpha);
+        __m256 beta_vec = _mm256_set1_ps(beta);
+
+        for (i = 0; i < N; i++) { // outer-loop for rows of matrix A and vector.
+            /* Initialises three 256-bit vectors, each vector set to its respective current values:
+               A[i][j], x[j], and w[j], for parallel processing. */
+            __m256 a_vec = _mm256_set1_ps(A[i][j]);
+            __m256 x_vec = _mm256_set1_ps(x[j]);
+            __m256 w_vec = _mm256_set1_ps(w[i]);
+
+            __m256 sum_vec = _mm256_setzero_ps(); // Initialise the accumulator vector as zero
+
+            for (j = 0; j < N; j += 8) { // vectorisation begins, process 8 elements at a time
+                __m256 a_vec = _mm256_load_ps(&A[i][j]); // Load elements from A
+                __m256 x_vec = _mm256_load_ps(&x[j]); // Load elements from x
+
+                /* (w[i] - beta) + ((alpha * A[i][j]) * x[j]);
+                   Order of Operations:
+                   1. A = alpha*A[i][j]
+                   2. B = A*x[j]
+                   3. C = (w[i]-beta)
+                   4. sum_vec = B+C
+                   ^^This process happens 8-times in a single-iteration^^ */
+                __m256 vec_A = _mm256_mul_ps(alpha_vec, a_vec); // (alpha * A[i][j])
+                __m256 vec_B = _mm256_mul_ps(vec_A, x_vec); // (vec_A) * x[j]
+                sum_vec = _mm256_add_ps(sum_vec, vec_B); // Accumulate the result in sum_vec
+            }
+
+            // Perform horizontal addition to sum up the elements in sum_vec
+            sum_vec = _mm256_hadd_ps(sum_vec, sum_vec);
+            sum_vec = _mm256_hadd_ps(sum_vec, sum_vec);
+            sum_vec = _mm256_hadd_ps(sum_vec, sum_vec);
+
+            float sum = _mm_cvtss_f32(_mm256_castps256_ps128(sum_vec));
+            w[i] = sum + (w[i] - beta);
+        }
+    }
 }
+
+
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

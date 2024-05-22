@@ -198,7 +198,7 @@ void initialize() {
             A[i][j] = (i % 99) + (j % 14) + 0.013f;
         }
 
-    //initialize routine1 arrays with random values
+    //init routine1 arrays with random values
     for (i = 0; i < N; i++) {
         x[i] = (i % 19) - 0.01f;
         w[i] = (i % 5) - 0.002f;
@@ -344,9 +344,11 @@ void routine2_vec(float alpha, float beta) {
     }
     
     /*
-    [[ ]]
+    [[ ]] !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     [ ] First, you needed to use hadd instruction so as to add all the values in sum_vec.
-    [ ] Second, you needed to load/store one element of w[i] not eight. Right now you store 8 elements in memory and you overwrite the output; this is problematic in the last 7 iterations as you store outside of the array's bounds.
+    [ ] Second, you needed to load/store one element of w[i] not eight. Right now you store
+        8 elements in memory and you overwrite the output; this is problematic in the last
+        7 iterations as you store outside of the array's bounds.
     [ ] Furthermore, you did not take into account the case where N%8 is not zero.
     */
 

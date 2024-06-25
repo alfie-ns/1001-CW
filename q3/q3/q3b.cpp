@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
         deleteArrays(); //free memory
     }
 
-    return 0; //end of the program
+    return 0; //success
 
 }
 

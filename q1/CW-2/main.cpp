@@ -158,7 +158,7 @@ int main() {
     M is the size of the arrays for routine1
     N is the size of the arrays for routine2
 
-    {x} Make routine1_vec
+    [x] Make routine1_vec
     [x] Make routine2_vec
     [x] Make copies of y and w arrays before running vectorised versions, for testing
     [x] RESULTS DO NOT MATCH.

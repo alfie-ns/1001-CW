@@ -96,21 +96,9 @@ int main(int argc, char* argv[]) {
     std::cout << "Output Images Directory: " << outputDirectoryPath << std::endl;
 
     // loop through all files in the input directory
-    // define the entry as a directory iterator, auto& means the type is automatically deduced
     for (const auto& entry : std::filesystem::directory_iterator(inputDirectoryPath)) {
         std::string filename = entry.path().filename(); // sets filename to the current file
 
-        /*
-            strcpy: copies the string pointed to by src, including the terminating null byte ('\0'),
-            to the buffer pointed to by dest, and returns it.
-
-            sprintf: writes the output to a character string buffer. The function returns the number of characters written to the buffer, not counting the terminating null character.
-
-            In this code, strcpy is used to copy the concatenated strings (directory path + "/" + filename)
-            into character arrays allocated on the stack (inFile, blurFile, and edgeFile).
-            Then, sprintf is used to construct the complete file paths by formatting the strings
-            with the directory paths and filenames.
-        */
 
         char* inFile = new char[inputDirectoryPath.length() + filename.length() + 2];
         strcpy(inFile, (inputDirectoryPath + "/" + filename).c_str());
@@ -137,10 +125,12 @@ int main(int argc, char* argv[]) {
         write_image2(blurFile, filt); //store output image to the disc
         write_image2(edgeFile, gradient); //store output image to the disc
 
+
+
         deleteArrays(); //free memory
     }
 
-    return 0; //success
+    return 0;
 
 }
 

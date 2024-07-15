@@ -148,46 +148,7 @@ int main() {
 
     return 0; // return 0 to indicate that program has finished successfully
 }
-/*
-    
-    Routine1: y[i] = (alpha * y[i]) + (beta * z[i]);
-    Routine2: w[i] = w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
 
-    declspec(align(64)) is used to align the arrays to 64-byte boundaries
-
-    M is the size of the arrays for routine1
-    N is the size of the arrays for routine2
-
-    [x] Make routine1_vec
-    [x] Make routine2_vec
-    [x] Make copies of y and w arrays before running vectorised versions, for testing
-    [x] RESULTS DO NOT MATCH.
-
-    Hi, I apologies for not attending mant lectures, it was an embarrassingly
-    foolish thing to do, learning all of this last-minute was the hardest thing
-    I've ever done, however it was a prestige coursework, intrinsics
-    is an excellent fun approach to showing understanding of how a computer thinks. 
-    
-    I'm embarrsed for not coming to lectures, I may see you
-    in year 3 optional modules, and will be at all
-    lectures and labs.
-
-    https://github.com/alfie-ns/1001-q1
-
-    ** AVX intrinsic Functions: **
-
-    __m256: means a 256-bit variable that can hold eight 32-bit single-precision floating-point values.
-    _mm256_load_ps: loads eight 32-bit single-precision floating-point values.
-    _mm256_store_ps: stores eight 32-bit single-precision floating-point values into memory.
-    _mm256_add_ps: adds eight 32-bit single-precision floating-point values.
-    _mm256_sub_ps: subtracts eight 32-bit single-precision floating-point values.
-    _mm256_mul_ps: multiplies eight 32-bit single-precision floating-point values
-    _mm256_setzero_ps: initializes all elements of this 256-bit vector to zero.
-    _mm256_set1_ps: initializes all elements of this 256-bit vector with the same single-precision floating-point value.
-    _mm256_fmad_ps: performs a fused multiply-add operation on eight 32-bit single-precision floating-point values.
-    _mm256_hadd_ps: horizontally adds adjacent pairs of 32-bit single-precision floating-point values.
-
- */
 void initialize() {
 
     unsigned int i, j;
@@ -223,10 +184,10 @@ unsigned short int equal(float a, float b) {
         return 1; //wrong result
 }
 
-
-
-
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+// ------------------------------------------------------ROUTINE 1----------------------------------------------------------------------------------------------------------------------------------------
 
 void routine1(float alpha, float beta) { // routine1: y[i] = alpha * y[i] + beta * z[i];
 
@@ -265,8 +226,7 @@ void routine1_vec(float alpha, float beta) {
     }
 }
 
-
-// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------ROUTINE 2----------------------------------------------------------------------------------------------------------------------------------------
 
 void routine2(float alpha, float beta) {
 
@@ -280,7 +240,10 @@ void routine2(float alpha, float beta) {
 }
 
 /*
-// OLD ROUTINE2
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+OLD ROUTINE2 |
+-------------
+
 void routine2_vec(float alpha, float beta) {
 
     unsigned int i = 0, j = 0; // init loop counters with 0 for i and j, 
@@ -345,7 +308,8 @@ void routine2_vec(float alpha, float beta) {
 }
 */
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// NEW ROUTINE2
+// NEW ROUTINE2 |
+// -------------
     /*
     [[X]] 
     [X] First, you needed to use hadd instruction so as to add all the values in sum_vec.
@@ -354,41 +318,106 @@ void routine2_vec(float alpha, float beta) {
         7 iterations as you store outside of the array's bounds.
     [X] Furthermore, you did not take into account the case where N%8 is not zero.
     */
-   void routine2_vec(float alpha, float beta) {
-        unsigned int i = 0, j = 0;
+   /*
+    void routine2_vec(float alpha, float beta) {
+        unsigned int i = 0, j = 0; // init loop counters with 0 for i and j,
+        // Create AVX vectors for alpha and beta
+        __m256 alpha_vec = _mm256_set1_ps(alpha); // set1_ps sets all elements of alpha to alpha_vec, which holds 8 elements
+        __m256 beta_vec = _mm256_set1_ps(beta); // set1_ps sets all elements of beta to beta_vec, which holds 8 elements
 
-        __m256 alpha_vec = _mm256_set1_ps(alpha);
-        __m256 beta_vec = _mm256_set1_ps(beta);
+        // Outer loop: ensure we're only loading/storing one element of w[i] at a time, thus not overwriting output
+        for (i = 0; i < N; i++) { .
+            __m256 sum_vec = _mm256_setzero_ps(); // init sum_vec before accumlation
+            __m256 w_vec = _mm256_set1_ps(w[i]);  
+            __m256 w_minus_beta_vec = _mm256_sub_ps(w_vec, beta_vec);
+            // ^calculate a sum for each row of the matrix^
 
-        for (i = 0; i < N; i++) {
-            __m256 sum_vec = _mm256_setzero_ps();
-            __m256 w_vec = _mm256_set1_ps(w[i]);
+            for (j = 0; j < N - 7; j += 8) { // begin vectorisation, process 8 elements at a time
+                __m256 a_vec = _mm256_load_ps(&A[i][j]); // load 8 elements from A
+                __m256 x_vec = _mm256_load_ps(&x[j]); // load 8 elements from x
 
-            for (j = 0; j < N - 7; j += 8) {
-                __m256 a_vec = _mm256_load_ps(&A[i][j]);
-                __m256 x_vec = _mm256_load_ps(&x[j]);
-
+                // 1. A = alpha * A[i][j]
                 __m256 vec_A = _mm256_mul_ps(alpha_vec, a_vec);
+                // 2. B = A * x[j]
                 __m256 vec_B = _mm256_mul_ps(vec_A, x_vec);
-                sum_vec = _mm256_add_ps(sum_vec, vec_B);
-            }
-
-            // Handle remaining elements if N is not divisible by 8
-            float sum_remainder = 0.0f;
-            for (; j < N; j++) {
-                sum_remainder += alpha * A[i][j] * x[j];
-            }
+                // 3. C = (w[i] - beta) + B
+                __m256 vec_C = _mm256_add_ps(w_minus_beta_vec, vec_B);
+                // 4. accum the result
+                sum_vec = _mm256_add_ps(sum_vec, vec_C);
+            } // (w[i] - beta) + ((alpha * A[i][j]) * x[j]);
 
             // Perform horizontal addition to sum up the elements in sum_vec
-            sum_vec = _mm256_hadd_ps(sum_vec, sum_vec);
-            sum_vec = _mm256_hadd_ps(sum_vec, sum_vec);
+            __m128 sum_lo = _mm256_castps256_ps128(sum_vec); // extract lower 128 bits of sum_lo
+            __m128 sum_hi = _mm256_extractf128_ps(sum_vec, 1); // extract upper 128 bits of sum_hi
+            __m128 sum_128 = _mm_add_ps(sum_lo, sum_hi); // add the two 128-bit vectors
+            sum_128 = _mm_hadd_ps(sum_128, sum_128);
+            sum_128 = _mm_hadd_ps(sum_128, sum_128);
+            // The above operations correctly sum all 8 elements of sum_vec:
+            // 1. seperate lower and upper 128 bits of sum_vec
+            // 2. add these two 128-bit vectors
+            // 3. perform horizontal addition to get the final sum
             
+            // extract the final sum from the vector to a scalar float
             float sum = _mm_cvtss_f32(_mm256_castps256_ps128(sum_vec));
             sum = sum + sum_remainder;
 
-            // Update w[i] with the final result
-            w[i] = sum + (w[i] - beta);
+            // store result
+            w[i] = sum;
+        }
+
+        // If N is not divisible by 8, process the remaining elements
+        for (; j < N; j++) {
+            w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
         }
     }
+    */
+
+void routine2_vec(float alpha, float beta) {
+    unsigned int i = 0, j = 0; // init loop counters with 0 for i and j
+    // Create AVX vectors for alpha and beta
+    __m256 alpha_vec = _mm256_set1_ps(alpha); // set1_ps sets all elements of alpha to alpha_vec, which holds 8 elements
+    __m256 beta_vec = _mm256_set1_ps(beta); // set1_ps sets all elements of beta to beta_vec, which holds 8 elements
+
+    // Outer loop: ensure we're only loading/storing one element of w[i] at a time, thus not overwriting output
+    for (i = 0; i < N; i++) {
+        __m256 sum_vec = _mm256_setzero_ps(); // init sum_vec before accumulation
+        __m256 w_vec = _mm256_set1_ps(w[i]);
+        __m256 w_minus_beta_vec = _mm256_sub_ps(w_vec, beta_vec);
+
+        for (j = 0; j < N - 7; j += 8) { // begin vectorisation, process 8 elements at a time
+            __m256 a_vec = _mm256_load_ps(&A[i][j]); // load 8 elements from A
+            __m256 x_vec = _mm256_load_ps(&x[j]); // load 8 elements from x
+
+            // 1. A = alpha * A[i][j]
+            __m256 vec_A = _mm256_mul_ps(alpha_vec, a_vec);
+            // 2. B = A * x[j]
+            __m256 vec_B = _mm256_mul_ps(vec_A, x_vec);
+            // 3. C = (w[i] - beta) + B
+            __m256 vec_C = _mm256_add_ps(w_minus_beta_vec, vec_B);
+            // 4. accum the result
+            sum_vec = _mm256_add_ps(sum_vec, vec_C);
+        }
+
+        // Handle remaining elements if N is not divisible by 8
+        float sum_remainder = 0.0f; // init to float
+        for (; j < N; j++) {
+            sum_remainder += (w[i] - beta) + (alpha * A[i][j] * x[j]);
+        }
+
+        // Perform horizontal addition to sum up the elements in sum_vec
+        __m128 sum_lo = _mm256_castps256_ps128(sum_vec); // extract lower 128 bits
+        __m128 sum_hi = _mm256_extractf128_ps(sum_vec, 1); // extract upper 128 bits
+        __m128 sum_128 = _mm_add_ps(sum_lo, sum_hi); // 128+128 bit = 256 bit
+        sum_128 = _mm_hadd_ps(sum_128, sum_128);
+        sum_128 = _mm_hadd_ps(sum_128, sum_128);
+
+        // Extract the final sum from the vector to a scalar float
+        float sum = _mm_cvtss_f32(sum_128);
+        sum += sum_remainder;
+
+        // Store result
+        w[i] = sum;
+    }
+}
     
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

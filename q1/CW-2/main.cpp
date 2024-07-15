@@ -355,39 +355,50 @@ void routine2_vec(float alpha, float beta) {
     [X] Furthermore, you did not take into account the case where N%8 is not zero.
     */
    void routine2_vec(float alpha, float beta) {
-        unsigned int i = 0, j = 0;
+        unsigned int i = 0, j = 0; // init loop counters with 0 for i and j
+        // Create AVX vectors for alpha and beta
+        __m256 alpha_vec = _mm256_set1_ps(alpha); // set1_ps sets all elements of alpha to alpha_vec, which holds 8 elements
+        __m256 beta_vec = _mm256_set1_ps(beta); // set1_ps sets all elements of beta to beta_vec, which holds 8 elements
 
-        __m256 alpha_vec = _mm256_set1_ps(alpha);
-        __m256 beta_vec = _mm256_set1_ps(beta);
-
+        // Outer loop: ensure we're only loading/storing one element of w[i] at a time, thus not overwriting output
         for (i = 0; i < N; i++) {
-            __m256 sum_vec = _mm256_setzero_ps();
+            __m256 sum_vec = _mm256_setzero_ps(); // init sum_vec before accumulation
             __m256 w_vec = _mm256_set1_ps(w[i]);
+            __m256 w_minus_beta_vec = _mm256_sub_ps(w_vec, beta_vec);
 
-            for (j = 0; j < N - 7; j += 8) {
-                __m256 a_vec = _mm256_load_ps(&A[i][j]);
-                __m256 x_vec = _mm256_load_ps(&x[j]);
+            for (j = 0; j < N - 7; j += 8) { // begin vectorisation, process 8 elements at a time
+                __m256 a_vec = _mm256_load_ps(&A[i][j]); // load 8 elements from A
+                __m256 x_vec = _mm256_load_ps(&x[j]); // load 8 elements from x
 
+                // 1. A = alpha * A[i][j]
                 __m256 vec_A = _mm256_mul_ps(alpha_vec, a_vec);
+                // 2. B = A * x[j]
                 __m256 vec_B = _mm256_mul_ps(vec_A, x_vec);
-                sum_vec = _mm256_add_ps(sum_vec, vec_B);
+                // 3. C = (w[i] - beta) + B
+                __m256 vec_C = _mm256_add_ps(w_minus_beta_vec, vec_B);
+                // 4. accum the result
+                sum_vec = _mm256_add_ps(sum_vec, vec_C);
             }
 
             // Handle remaining elements if N is not divisible by 8
             float sum_remainder = 0.0f;
             for (; j < N; j++) {
-                sum_remainder += alpha * A[i][j] * x[j];
+                sum_remainder += (w[i] - beta) + (alpha * A[i][j] * x[j]);
             }
 
             // Perform horizontal addition to sum up the elements in sum_vec
-            sum_vec = _mm256_hadd_ps(sum_vec, sum_vec);
-            sum_vec = _mm256_hadd_ps(sum_vec, sum_vec);
-            
-            float sum = _mm_cvtss_f32(_mm256_castps256_ps128(sum_vec));
-            sum = sum + sum_remainder;
+            __m128 sum_lo = _mm256_castps256_ps128(sum_vec); // extract lower 128 bits
+            __m128 sum_hi = _mm256_extractf128_ps(sum_vec, 1); // extract upper 128 bits
+            __m128 sum_128 = _mm_add_ps(sum_lo, sum_hi); // add the two 128-bit vectors
+            sum_128 = _mm_hadd_ps(sum_128, sum_128);
+            sum_128 = _mm_hadd_ps(sum_128, sum_128);
 
-            // Update w[i] with the final result
-            w[i] = sum + (w[i] - beta);
+            // Extract the final sum from the vector to a scalar float
+            float sum = _mm_cvtss_f32(sum_128);
+            sum += sum_remainder;
+
+            // Store result
+            w[i] = sum;
         }
     }
     

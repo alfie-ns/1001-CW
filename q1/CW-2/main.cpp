@@ -9,7 +9,7 @@
 #include <stdio.h> // for input/output functions
 #include <time.h> // time related predefined library
 #include <pmmintrin.h> // SSE and AVX intrinsics
-#include <process.h> // for system() function
+#include <process.h> // for Windows intrinsics
 #include <chrono> //for high_resolution_clock
 #include <iostream> // for input/output functions
 #include <immintrin.h> // AVX intrinsics

@@ -162,17 +162,9 @@ int main() {
     [x] Make routine2_vec
     [x] Make copies of y and w arrays before running vectorised versions, for testing
     [x] RESULTS DO NOT MATCH.
+    [X] Make new routine2_vec
 
-    Hi, I apologies for not attending mant lectures, it was an embarrassingly
-    foolish thing to do, learning all of this last-minute was the hardest thing
-    I've ever done, however it was a prestige coursework, intrinsics
-    is an excellent fun approach to showing understanding of how a computer thinks. 
-    
-    I'm embarrsed for not coming to lectures, I may see you
-    in year 3 optional modules, and will be at all
-    lectures and labs.
-
-    https://github.com/alfie-ns/1001-q1
+    https://github.com/alfie-ns/1001-CW
 
     ** AVX intrinsic Functions: **
 
@@ -380,7 +372,7 @@ void routine2_vec(float alpha, float beta) {
                 sum_vec = _mm256_add_ps(sum_vec, vec_C);
             }
 
-            // Handle remaining elements if N is not divisible by 8
+            // Catch any remaining instances (continues from where previous loop left off)
             float sum_remainder = 0.0f;
             for (; j < N; j++) {
                 sum_remainder += (w[i] - beta) + (alpha * A[i][j] * x[j]);

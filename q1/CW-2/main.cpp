@@ -393,22 +393,12 @@ void routine2_vec(float alpha, float beta) {
             _mm256_extractf128_ps: Extract 128-bit from the upper half, 1 specifies the upper half
 
             _mm256_extractf128_ps could be used to extract the lower-half, however it has an additional argument, 
-            where as _mm256_castps256_ps128 immediately expects the lower-half thus is more efficient.
+            where as _mm256_castps256_ps128 immediately expects the lower-half thus more efficient.
 
             sum_lo = lower 128 bits of sum_vec
             sum_hi = upper 128 bits of sum_vec
             sum_128 = adds the two 128-bit vectors (sum_lo + sum_hi)
 
-            First horizontal add: [a+b, c+d, a+b, c+d]
-            Second horizontal add: [a+b+c+d, a+b+c+d, a+b+c+d, a+b+c+d]
-
-            _mm_cvtss_f32 extracts the lowest 32 bits (first float) from the 128-bit vector.
-            After the horizontal additions; this lowest 32-bit float contains the total sum of the original vector elements.
-            We specifically extract this first float as it contains our desired sum.
-
-            since all four floats are identical at this point, it doesn't matter which one we extract.
-
-            Finally, add the remainder sum to the total sum; then store the result in w[i]
             */
             __m128 sum_lo = _mm256_castps256_ps128(sum_vec); 
             __m128 sum_hi = _mm256_extractf128_ps(sum_vec, 1); 
@@ -419,7 +409,20 @@ void routine2_vec(float alpha, float beta) {
             // Extract the final sum from the vector to a scalar float
             float sum = _mm_cvtss_f32(sum_128); // Convert the lower 32 bits (first element) of the 128-bit vector to a scalar float
             sum += sum_remainder; // add the remainder sum
+            /*
+            
+            First horizontal add: [a+b, c+d, a+b, c+d]
+            Second horizontal add: [a+b+c+d, a+b+c+d, a+b+c+d, a+b+c+d]
 
+            _mm_cvtss_f32 extracts the lowest 32 bits (first float) from the 128-bit vector.
+            After the horizontal additions; this lowest 32-bit float contains the total sum of the original vector elements.
+            We specifically extract this first float as it contains our desired sum.
+
+            since all four floats are identical at this point, it doesn't matter which one we extract.
+
+            Finally, add the remainder sum to the total sum; then store the result in w[i] foe each i
+            
+            */
             // Store result
             w[i] = sum;
             

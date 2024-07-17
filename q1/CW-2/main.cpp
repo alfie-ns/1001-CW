@@ -259,7 +259,9 @@ void routine1_vec(float alpha, float beta) {
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ROUTINE2
 
+// NON-OPTIMISED ROUTINE2
 void routine2(float alpha, float beta) {
 
     unsigned int i, j;
@@ -272,12 +274,10 @@ void routine2(float alpha, float beta) {
 }
 
 /*
-// OLD ROUTINE2
+// OLD ROUTINE2 | VECTORISED
 void routine2_vec(float alpha, float beta) {
 
     unsigned int i = 0, j = 0; // init loop counters with 0 for i and j, 
-
-
 
         set1_ps sets all elements of alpha and beta to a vector
         which each hold 8 elements. It could also be said to broadcast the values
@@ -337,7 +337,8 @@ void routine2_vec(float alpha, float beta) {
 }
 */
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// NEW ROUTINE2
+// NEW ROUTINE2 | VECTORISED
+
     /*
     [[X]] 
     [X] First, you needed to use hadd instruction so as to add all the values in sum_vec.
@@ -345,7 +346,10 @@ void routine2_vec(float alpha, float beta) {
         8 elements in memory and you overwrite the output; this is problematic in the last
         7 iterations as you store outside of the array's bounds.
     [X] Furthermore, you did not take into account the case where N%8 is not zero.
+
+    (w[i] - beta) + ((alpha * A[i][j]) * x[j]);
     */
+
    void routine2_vec(float alpha, float beta) {
         unsigned int i = 0, j = 0; // init loop counters with 0 for i and j
         // Create AVX vectors for alpha and beta
@@ -354,8 +358,9 @@ void routine2_vec(float alpha, float beta) {
 
         // Outer loop: ensure we're only loading/storing one element of w[i] at a time, thus not overwriting output
         for (i = 0; i < N; i++) {
+
             __m256 sum_vec = _mm256_setzero_ps(); // init sum_vec before accumulation
-            __m256 w_vec = _mm256_set1_ps(w[i]);
+            __m256 w_vec = _mm256_set1_ps(w[i]); // Broadcast w[i] into all 8 elements of the AVX vector w_vec
             __m256 w_minus_beta_vec = _mm256_sub_ps(w_vec, beta_vec);
 
             for (j = 0; j < N - 7; j += 8) { // begin vectorisation, process 8 elements at a time
@@ -374,24 +379,50 @@ void routine2_vec(float alpha, float beta) {
 
             // Catch any remaining instances (continues from where previous loop left off)
             float sum_remainder = 0.0f;
-            for (; j < N; j++) {
+            for (; j < N; j++) { // process remaining 'j' instances
                 sum_remainder += (w[i] - beta) + (alpha * A[i][j] * x[j]);
-            }
+            } // catch remaining instances after 8-element vectorisation; store in sum_remainder for later addition to total sum
 
-            // Perform horizontal addition to sum up the elements in sum_vec
-            __m128 sum_lo = _mm256_castps256_ps128(sum_vec); // extract lower 128 bits
-            __m128 sum_hi = _mm256_extractf128_ps(sum_vec, 1); // extract upper 128 bits
-            __m128 sum_128 = _mm_add_ps(sum_lo, sum_hi); // add the two 128-bit vectors
+            /* Perform horizontal addition to sum up the elements in sum_vec
+            -----------------------------------------------------------------
+            1. Extract the lower 128 bits of the 256-bit vector
+            2. Extract the upper 128 bits of the 256-bit vector
+            3. Add the two 128-bit vectors
+
+            _mm246_castps256_ps128: Returns the lower 128 bits of a 256-bit floating-point vector of [8 x float] as a 128-bit floating-point vector of [4 x float].
+            _mm256_extractf128_ps: Extract 128-bit from the upper half, 1 specifies the upper half
+
+            _mm256_extractf128_ps could be used to extract the lower-half, however it has an additional argument, 
+            where as _mm256_castps256_ps128 immediately expects the lower-half thus is more efficient.
+
+            sum_lo = lower 128 bits of sum_vec
+            sum_hi = upper 128 bits of sum_vec
+            sum_128 = adds the two 128-bit vectors (sum_lo + sum_hi)
+
+            First horizontal add: [a+b, c+d, a+b, c+d]
+            Second horizontal add: [a+b+c+d, a+b+c+d, a+b+c+d, a+b+c+d]
+
+            _mm_cvtss_f32 extracts the lowest 32 bits (first float) from the 128-bit vector.
+            After the horizontal additions; this lowest 32-bit float contains the total sum of the original vector elements.
+            We specifically extract this first float as it contains our desired sum.
+
+            since all four floats are identical at this point, it doesn't matter which one we extract.
+
+            Finally, add the remainder sum to the total sum; then store the result in w[i]
+            */
+            __m128 sum_lo = _mm256_castps256_ps128(sum_vec); 
+            __m128 sum_hi = _mm256_extractf128_ps(sum_vec, 1); 
+            __m128 sum_128 = _mm_add_ps(sum_lo, sum_hi); 
             sum_128 = _mm_hadd_ps(sum_128, sum_128);
             sum_128 = _mm_hadd_ps(sum_128, sum_128);
 
             // Extract the final sum from the vector to a scalar float
-            float sum = _mm_cvtss_f32(sum_128);
-            sum += sum_remainder;
+            float sum = _mm_cvtss_f32(sum_128); // Convert the lower 32 bits (first element) of the 128-bit vector to a scalar float
+            sum += sum_remainder; // add the remainder sum
 
             // Store result
             w[i] = sum;
+            
         }
     }
-    
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

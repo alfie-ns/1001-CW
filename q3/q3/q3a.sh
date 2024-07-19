@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Compile C++ program
-g++ -o q3 ../../q3/main_linux.cpp -lm # -lm for the math library
+g++ -o q3 ../../q3/q3a.cpp -lm # -lm for the math library
 
 # Create variables to hold the image locations. Use the full path name for each image.
 input_image=../../q3-images/input_images/a1.pgm
@@ -16,7 +16,7 @@ edge_image=../../q3-images/output_images/edge_detected.pgm
 : <<'END'
 
         You use g++ to compile the C++ program in the q3 directory,
-        main_linux.cpp for the Linux-type main.cpp file that's successfully compiled in Linux.
+        main_linux.cpp for the Linux-type q3a.cpp file that's successfully compiled in Linux.
         Specify math library use with -lm.
 
 END

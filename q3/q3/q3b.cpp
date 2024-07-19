@@ -5,7 +5,7 @@
 ------------------UNIVERSITY OF PLYMOUTH, SCHOOL OF ENGINEERING, COMPUTING AND MATHEMATICS---
 */
 
-//In Linux compile using : g++ q3.cpp -o q3 -O3 -lm  
+// Compile using: g++ q3.cpp -o q3 -O3 -lm  
 
 #include <stdio.h>
 #include <string.h>
@@ -113,7 +113,6 @@ int main(int argc, char* argv[]) {
         sprintf(blurFile, "%s/blur_%s", outputDirectoryPath.c_str(), filename.c_str());
         sprintf(edgeFile, "%s/edge_detected_%s", outputDirectoryPath.c_str(), filename.c_str());
 
-
         printf("\nProcessing image: %s\n", inFile);
 
         read_image(inFile);//read image from disc
@@ -124,7 +123,6 @@ int main(int argc, char* argv[]) {
         // this writes the images to the output directory
         write_image2(blurFile, filt); //store output image to the disc
         write_image2(edgeFile, gradient); //store output image to the disc
-
 
 
         deleteArrays(); //free memory

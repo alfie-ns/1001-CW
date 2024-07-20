@@ -89,15 +89,15 @@ process_images() {
 view_images() {
     clear # Clear the screen before viewing images
     print_blue "\nAttempting to open output images..."
-    output_dir="q3-images/output_images"
+    output_dir="q3-images/output_images" # init output_dir as respective directory
     
-    if [ ! -d "$output_dir" ]; then
+    if [ ! -d "$output_dir" ]; then # if output_dir DOESN'T exist
         print_red "Error: Output directory $output_dir does not exist."
         return 1
     fi
     
     image_count=$(find "$output_dir" -name "*.pgm" | wc -l) # count number of PGM images in output_images
-    if [ "$image_count" -eq 0 ]; then
+    if [ "$image_count" -eq 0 ]; then # if no PGM images found
         print_yellow "No PGM images found in $output_dir."
         return 1
     fi
@@ -155,22 +155,19 @@ EOF
 # ASCII Art
 print_ascii_art() {
     cat << "EOF"
------------------------------------------
-| ⚙️ Image Processor ⚙️                    |
------------------------------------------
-|         _  __ _                        |
-|   __ _ | |/ _(_) ___       _ __  ___   | 
-|  / _` || | |_| |/ _ \_____| '_ \/ __|  |
-| | (_| || |  _| |  __/_____| | | \__ \  |
-|  \__,_||_|_| |_|\___|     |_| |_|___/  |
- ----------------------------------------
+         _  __ _                     
+   __ _ | |/ _(_) ___       _ __  ___
+  / _` || | |_| |/ _ \_____| '_ \/ __|
+ | (_| || |  _| |  __/_____| | | \__ \
+  \__,_||_|_| |_|\___|     |_| |_|___/
+  
 EOF
 }
 
 # Main
 clear # clear terminal
 print_ascii_art # print title
-print_bold "\nWelcome to the Image Processing Script"
+print_bold "C++ Image Processing Script"
 while true; do
     echo
     show_menu

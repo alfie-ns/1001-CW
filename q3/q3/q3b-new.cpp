@@ -276,7 +276,7 @@ void Sobel() {
     __m256i GyMask_row3 = _mm256_set_epi32(1, 2, 1, 1, 2, 1, 1, 2);
 
     for (int row = 1; row < N - 1; row++) {
-        for (int col = 1; col < M - 1; col += SIMD_WIDTH) {
+        for (int col = 1; col < M - SIMD_WIDTH; col += SIMD_WIDTH) {
             // _mm256_setzero_si256: Sets a 256-bit register to zero
             __m256i Gx = _mm256_setzero_si256();
             __m256i Gy = _mm256_setzero_si256();
@@ -304,19 +304,19 @@ void Sobel() {
             }
 
             // Calculate gradient strength
-            __m256i Gx_squared = _mm256_mullo_epi32(Gx, Gx);
-            __m256i Gy_squared = _mm256_mullo_epi32(Gy, Gy);
-            __m256i sum_squared = _mm256_add_epi32(Gx_squared, Gy_squared);
+            __m256i Gx_abs = _mm256_abs_epi32(Gx);
+            __m256i Gy_abs = _mm256_abs_epi32(Gy);
+            __m256i gradient_sum = _mm256_add_epi32(Gx_abs, Gy_abs);
 
             // _mm256_cvtepi32_ps: Converts 8 32-bit integers to 8 32-bit vector of floats
-            __m256 sum_squared_float = _mm256_cvtepi32_ps(sum_squared);
+            __m256 gradient_float = _mm256_cvtepi32_ps(gradient_sum);
             // _mm256_sqrt_ps: Computes square root of 8 32-bit floats
-            __m256 gradient_float = _mm256_sqrt_ps(sum_squared_float);
+            gradient_float = _mm256_sqrt_ps(gradient_float);
 
             // _mm256_cvtps_epi32: Converts 8 32-bit floats to 8 32-bit integers
             __m256i gradient_int = _mm256_cvtps_epi32(gradient_float);
-            // _mm256_packus_epi32: Packs 8 32-bit integers into 16 16-bit integers with unsigned saturation
-            __m256i gradient_byte = _mm256_packus_epi32(gradient_int, _mm256_setzero_si256());
+            // _mm256_packus_epi16: Packs 8 32-bit integers into 16 16-bit integers with unsigned saturation
+            __m256i gradient_byte = _mm256_packus_epi16(_mm256_packs_epi32(gradient_int, _mm256_setzero_si256()), _mm256_setzero_si256());
             // _mm256_permute4x64_epi64: Rearranges 4 64-bit integers in a 256-bit register
             gradient_byte = _mm256_permute4x64_epi64(gradient_byte, 0xD8);
             // _mm256_castsi256_si128: Casts upper 128 bits of a 256-bit integer to a 128-bit integer
@@ -328,15 +328,15 @@ void Sobel() {
         for (int col = 0; col < 1; ++col) {
             gradient[M * row + col] = 0;
         }
-        for (int col = M - 1; col < M; ++col) {
+        for (int col = M - SIMD_WIDTH; col < M; ++col) {
             gradient[M * row + col] = 0;
         }
     }
 
     // Handle top and bottom rows
     for (int col = 0; col < M; ++col) {
-        gradient[col] = 0;
-        gradient[(N - 1) * M + col] = 0;
+        gradient[col] = 0; // top row: col = 0 to M because we're setting all columns in the first row to 0
+        gradient[(N - 1) * M + col] = 0; // bottom row: calculated by N-1 * M + col because N-1 is the index of the last row, and we multiply by M to get to that row's start, then add col to move across the row
     }
 }
 

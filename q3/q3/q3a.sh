@@ -15,9 +15,11 @@ edge_image=../../q3-images/output_images/edge_detected.pgm
 
 : <<'END'
 
-        You use g++ to compile the C++ program in the q3 directory,
-        main_linux.cpp for the Linux-type q3a.cpp file that's successfully compiled in Linux.
-        Specify math library use with -lm.
+
+Use g++ to compile the C++ program q3a.cpp 
+located in the q3 directory, creating a 
+Linux-compatible executable. Include the math
+library by specifying -lm in the compilation command.
 
 END
 

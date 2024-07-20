@@ -202,23 +202,23 @@ void Sobel() {
     const int SIMD_WIDTH = 8; // Number of 32-bit integers in a 256-bit AVX2 register
 
     // Load Sobel masks into 256-bit registers
-
-    //x direction
+    // _mm256_set_epi32: Sets 8 32-bit integers in a 256-bit register
     __m256i GxMask_row1 = _mm256_set_epi32(-1, 0, 1, -1, 0, 1, -1, 0);
     __m256i GxMask_row2 = _mm256_set_epi32(-2, 0, 2, -2, 0, 2, -2, 0);
     __m256i GxMask_row3 = _mm256_set_epi32(-1, 0, 1, -1, 0, 1, -1, 0);
 
-    //y direction
     __m256i GyMask_row1 = _mm256_set_epi32(-1, -2, -1, -1, -2, -1, -1, -2);
     __m256i GyMask_row2 = _mm256_set_epi32(0, 0, 0, 0, 0, 0, 0, 0);
     __m256i GyMask_row3 = _mm256_set_epi32(1, 2, 1, 1, 2, 1, 1, 2);
 
     for (int row = 1; row < N - 1; row++) {
         for (int col = 1; col < M - 1; col += SIMD_WIDTH) {
+            // _mm256_setzero_si256: Sets a 256-bit register to zero
             __m256i Gx = _mm256_setzero_si256();
             __m256i Gy = _mm256_setzero_si256();
 
             for (int rowOffset = -1; rowOffset <= 1; rowOffset++) {
+                // _mm256_loadu_si256: Loads 256 bits of unaligned memory into a register
                 __m256i pixels = _mm256_loadu_si256((__m256i*)&filt[M * (row + rowOffset) + col - 1]);
                 
                 __m256i GxMask, GyMask;
@@ -233,6 +233,8 @@ void Sobel() {
                     GyMask = GyMask_row3;
                 }
 
+                // _mm256_mullo_epi32: Multiplies 8 pairs of 32-bit integers
+                // _mm256_add_epi32: Adds 8 pairs of 32-bit integers
                 Gx = _mm256_add_epi32(Gx, _mm256_mullo_epi32(pixels, GxMask));
                 Gy = _mm256_add_epi32(Gy, _mm256_mullo_epi32(pixels, GyMask));
             }
@@ -242,16 +244,99 @@ void Sobel() {
             __m256i Gy_squared = _mm256_mullo_epi32(Gy, Gy);
             __m256i sum_squared = _mm256_add_epi32(Gx_squared, Gy_squared);
 
-            // Convert to float for square root
+            // _mm256_cvtepi32_ps: Converts 8 32-bit integers to 8 32-bit vector of floats
             __m256 sum_squared_float = _mm256_cvtepi32_ps(sum_squared);
+            // _mm256_sqrt_ps: Computes square root of 8 32-bit floats
             __m256 gradient_float = _mm256_sqrt_ps(sum_squared_float);
 
-            // Convert back to integer and store
+            // _mm256_cvtps_epi32: Converts 8 32-bit floats to 8 32-bit integers
             __m256i gradient_int = _mm256_cvtps_epi32(gradient_float);
+            // _mm256_packus_epi32: Packs 8 32-bit integers into 16 16-bit integers with unsigned saturation
             __m256i gradient_byte = _mm256_packus_epi32(gradient_int, _mm256_setzero_si256());
-            gradient_byte = _mm256_permute4x64_epi64(gradient_byte, 0xD8); // Reorder the packed results
+            // _mm256_permute4x64_epi64: Rearranges 4 64-bit integers in a 256-bit register
+            gradient_byte = _mm256_permute4x64_epi64(gradient_byte, 0xD8);
+            // _mm256_castsi256_si128: Casts upper 128 bits of a 256-bit integer to a 128-bit integer
+            // _mm_storeu_si128: Stores 128 bits of integer data to unaligned memory location
             _mm_storeu_si128((__m128i*)&gradient[M * row + col], _mm256_castsi256_si128(gradient_byte));
         }
+    }
+}
+
+void Sobel() {
+    const int SIMD_WIDTH = 8; // Number of 32-bit integers in a 256-bit AVX2 register
+
+    // Load Sobel masks into 256-bit registers
+    // _mm256_set_epi32: Sets 8 32-bit integers in a 256-bit register
+    __m256i GxMask_row1 = _mm256_set_epi32(-1, 0, 1, -1, 0, 1, -1, 0);
+    __m256i GxMask_row2 = _mm256_set_epi32(-2, 0, 2, -2, 0, 2, -2, 0);
+    __m256i GxMask_row3 = _mm256_set_epi32(-1, 0, 1, -1, 0, 1, -1, 0);
+
+    __m256i GyMask_row1 = _mm256_set_epi32(-1, -2, -1, -1, -2, -1, -1, -2);
+    __m256i GyMask_row2 = _mm256_set_epi32(0, 0, 0, 0, 0, 0, 0, 0);
+    __m256i GyMask_row3 = _mm256_set_epi32(1, 2, 1, 1, 2, 1, 1, 2);
+
+    for (int row = 1; row < N - 1; row++) {
+        for (int col = 1; col < M - 1; col += SIMD_WIDTH) {
+            // _mm256_setzero_si256: Sets a 256-bit register to zero
+            __m256i Gx = _mm256_setzero_si256();
+            __m256i Gy = _mm256_setzero_si256();
+
+            for (int rowOffset = -1; rowOffset <= 1; rowOffset++) {
+                // _mm256_loadu_si256: Loads 256 bits of unaligned memory into a register
+                __m256i pixels = _mm256_loadu_si256((__m256i*)&filt[M * (row + rowOffset) + col - 1]);
+                
+                __m256i GxMask, GyMask;
+                if (rowOffset == -1) {
+                    GxMask = GxMask_row1;
+                    GyMask = GyMask_row1;
+                } else if (rowOffset == 0) {
+                    GxMask = GxMask_row2;
+                    GyMask = GyMask_row2;
+                } else {
+                    GxMask = GxMask_row3;
+                    GyMask = GyMask_row3;
+                }
+
+                // _mm256_mullo_epi32: Multiplies 8 pairs of 32-bit integers
+                // _mm256_add_epi32: Adds 8 pairs of 32-bit integers
+                Gx = _mm256_add_epi32(Gx, _mm256_mullo_epi32(pixels, GxMask));
+                Gy = _mm256_add_epi32(Gy, _mm256_mullo_epi32(pixels, GyMask));
+            }
+
+            // Calculate gradient strength
+            __m256i Gx_squared = _mm256_mullo_epi32(Gx, Gx);
+            __m256i Gy_squared = _mm256_mullo_epi32(Gy, Gy);
+            __m256i sum_squared = _mm256_add_epi32(Gx_squared, Gy_squared);
+
+            // _mm256_cvtepi32_ps: Converts 8 32-bit integers to 8 32-bit vector of floats
+            __m256 sum_squared_float = _mm256_cvtepi32_ps(sum_squared);
+            // _mm256_sqrt_ps: Computes square root of 8 32-bit floats
+            __m256 gradient_float = _mm256_sqrt_ps(sum_squared_float);
+
+            // _mm256_cvtps_epi32: Converts 8 32-bit floats to 8 32-bit integers
+            __m256i gradient_int = _mm256_cvtps_epi32(gradient_float);
+            // _mm256_packus_epi32: Packs 8 32-bit integers into 16 16-bit integers with unsigned saturation
+            __m256i gradient_byte = _mm256_packus_epi32(gradient_int, _mm256_setzero_si256());
+            // _mm256_permute4x64_epi64: Rearranges 4 64-bit integers in a 256-bit register
+            gradient_byte = _mm256_permute4x64_epi64(gradient_byte, 0xD8);
+            // _mm256_castsi256_si128: Casts upper 128 bits of a 256-bit integer to a 128-bit integer
+            // _mm_storeu_si128: Stores 128 bits of integer data to unaligned memory location
+            _mm_storeu_si128((__m128i*)&gradient[M * row + col], _mm256_castsi256_si128(gradient_byte));
+        }
+
+        // Handle edge cases for each row
+        for (int col = 0; col < 1; ++col) {
+            gradient[M * row + col] = 0;
+        }
+        for (int col = M - 1; col < M; ++col) {
+            gradient[M * row + col] = 0;
+        }
+    }
+
+    // Handle top and bottom rows
+    for (int col = 0; col < M; ++col) {
+        gradient[col] = 0;
+        gradient[(N - 1) * M + col] = 0;
     }
 }
 

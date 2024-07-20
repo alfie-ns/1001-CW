@@ -42,6 +42,7 @@ show_progress() {
 }
 
 process_images() {
+    clear # Clear the screen before processing images
     print_blue "\nProcessing images..."
     
     # Check if the source file exists
@@ -72,8 +73,8 @@ process_images() {
     
     # Run the image processor
     ./image_processor q3-images/input_images q3-images/output_images &
-    show_progress $image_processor_pid 2 & 
-    wait $image_processor_pid # wait for image_processor to finish
+    show_progress $! 2 & 
+    wait $! # wait for image_processor to finish
     
     # Check if any output was produced
     if [ -z "$(ls -A q3-images/output_images)" ]; then
@@ -86,6 +87,7 @@ process_images() {
 }
 
 view_images() {
+    clear # Clear the screen before viewing images
     print_blue "\nAttempting to open output images..."
     output_dir="q3-images/output_images"
     
@@ -113,18 +115,14 @@ view_images() {
 }
 
 remove_images() {
+    clear # Clear the screen before removing images
     print_yellow "\nRemoving output images..."
     
-    if [ ! -f "./clear.sh" ]; then
-        print_red "Error: clear.sh script not found in the current directory."
-        return 1 # failure
-    fi
-    
-    if ! ./clear.sh; then # if script failts to run
-        print_red "Error: Failed to remove images."
-        return 1 # failure
-    fi
-    
+    rm -f image_processor # Force remove the executable file
+    cd q3-images/output_images # Change directory to output_images
+    for i in *; do
+        rm -f $i # loop through all files in the directory and force remove them
+    done
     print_green "Output images removed."
     return 0 # success
 }
@@ -141,6 +139,7 @@ EOF
 }
 
 show_help() {
+    clear # Clear the screen before showing help
     cat << EOF
 $(print_bold "\n📘 Help Information:")
 $(print_blue "1. Process images:") Compiles and runs the image processing program.
@@ -194,16 +193,18 @@ while true; do
             ;;
         4) show_help ;;
         5) 
+            clear # Clear the screen before exiting
             print_bold "\nExiting...\n"
-            if [ -f "./clear.sh" ]; then
-                ./clear.sh
-                print_green "q3-images/output_images cleaned."
-            else
-                print_yellow "Warning: clear.sh not found. Skipping cleanup."
-            fi
-            exit 0
+            rm -f image_processor # Force remove the executable file
+            cd q3-images/output_images # Change directory to output_images
+            for i in *; do
+                rm -f $i # loop through all files in the directory and force remove them
+            done
+            print_green "Cleaned up output images."
+            exit 0 #success
             ;;
         *)
+            clear # Clear the screen for invalid option
             print_red "\nInvalid option. Please choose a number between 1 and 5."
             ;;
     esac

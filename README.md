@@ -1,5 +1,5 @@
-﻿
-## 1001-q1 Vectorisation of Code [x]
+
+## 1001-q1 Vectorisation [X]
 
 **Routine1**:  ``` y[i] = alpha * y[i] + beta * z[i]; ```
 

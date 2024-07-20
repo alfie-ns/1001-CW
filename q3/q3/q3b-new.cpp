@@ -165,34 +165,94 @@ void Gaussian_Blur() {
 
 }
 
+// Sobel() NON-OPTIMISED
+// ----------------------
+//void Sobel() {
+//
+//    int row, col, rowOffset, colOffset;
+//    int Gx, Gy;
+//
+//    /*---------------------------- Determine edge directions and gradient strengths -------------------------------------------*/
+//    for (row = 1; row < N - 1; row++) {
+//        for (col = 1; col < M - 1; col++) {
+//
+//            Gx = 0;
+//            Gy = 0;
+//
+//            /* Calculate the sum of the Sobel mask times the nine surrounding pixels in the x and y direction */
+//            for (rowOffset = -1; rowOffset <= 1; rowOffset++) {
+//                for (colOffset = -1; colOffset <= 1; colOffset++) {
+//
+//                    Gx += filt[M * (row + rowOffset) + col + colOffset] * GxMask[rowOffset + 1][colOffset + 1];
+//                    Gy += filt[M * (row + rowOffset) + col + colOffset] * GyMask[rowOffset + 1][colOffset + 1];
+//                }
+//            }
+//
+//            gradient[M * row + col] = (unsigned char)sqrt(Gx * Gx + Gy * Gy); /* Calculate gradient strength       */
+//            //gradient[row][col] = abs(Gx) + abs(Gy); // this is an optimized version of the above
+//
+//        }
+//    }
+//
+//
+//}
+// Sobel() VECTORISED
+// ----------------------
 void Sobel() {
+    const int SIMD_WIDTH = 8; // Number of 32-bit integers in a 256-bit AVX2 register
 
-    int row, col, rowOffset, colOffset;
-    int Gx, Gy;
+    // Load Sobel masks into 256-bit registers
 
-    /*---------------------------- Determine edge directions and gradient strengths -------------------------------------------*/
-    for (row = 1; row < N - 1; row++) {
-        for (col = 1; col < M - 1; col++) {
+    //x direction
+    __m256i GxMask_row1 = _mm256_set_epi32(-1, 0, 1, -1, 0, 1, -1, 0);
+    __m256i GxMask_row2 = _mm256_set_epi32(-2, 0, 2, -2, 0, 2, -2, 0);
+    __m256i GxMask_row3 = _mm256_set_epi32(-1, 0, 1, -1, 0, 1, -1, 0);
 
-            Gx = 0;
-            Gy = 0;
+    //y direction
+    __m256i GyMask_row1 = _mm256_set_epi32(-1, -2, -1, -1, -2, -1, -1, -2);
+    __m256i GyMask_row2 = _mm256_set_epi32(0, 0, 0, 0, 0, 0, 0, 0);
+    __m256i GyMask_row3 = _mm256_set_epi32(1, 2, 1, 1, 2, 1, 1, 2);
 
-            /* Calculate the sum of the Sobel mask times the nine surrounding pixels in the x and y direction */
-            for (rowOffset = -1; rowOffset <= 1; rowOffset++) {
-                for (colOffset = -1; colOffset <= 1; colOffset++) {
+    for (int row = 1; row < N - 1; row++) {
+        for (int col = 1; col < M - 1; col += SIMD_WIDTH) {
+            __m256i Gx = _mm256_setzero_si256();
+            __m256i Gy = _mm256_setzero_si256();
 
-                    Gx += filt[M * (row + rowOffset) + col + colOffset] * GxMask[rowOffset + 1][colOffset + 1];
-                    Gy += filt[M * (row + rowOffset) + col + colOffset] * GyMask[rowOffset + 1][colOffset + 1];
+            for (int rowOffset = -1; rowOffset <= 1; rowOffset++) {
+                __m256i pixels = _mm256_loadu_si256((__m256i*)&filt[M * (row + rowOffset) + col - 1]);
+                
+                __m256i GxMask, GyMask;
+                if (rowOffset == -1) {
+                    GxMask = GxMask_row1;
+                    GyMask = GyMask_row1;
+                } else if (rowOffset == 0) {
+                    GxMask = GxMask_row2;
+                    GyMask = GyMask_row2;
+                } else {
+                    GxMask = GxMask_row3;
+                    GyMask = GyMask_row3;
                 }
+
+                Gx = _mm256_add_epi32(Gx, _mm256_mullo_epi32(pixels, GxMask));
+                Gy = _mm256_add_epi32(Gy, _mm256_mullo_epi32(pixels, GyMask));
             }
 
-            gradient[M * row + col] = (unsigned char)sqrt(Gx * Gx + Gy * Gy); /* Calculate gradient strength       */
-            //gradient[row][col] = abs(Gx) + abs(Gy); // this is an optimized version of the above
+            // Calculate gradient strength
+            __m256i Gx_squared = _mm256_mullo_epi32(Gx, Gx);
+            __m256i Gy_squared = _mm256_mullo_epi32(Gy, Gy);
+            __m256i sum_squared = _mm256_add_epi32(Gx_squared, Gy_squared);
 
+            // Convert to float for square root
+            __m256 sum_squared_float = _mm256_cvtepi32_ps(sum_squared);
+            __m256 gradient_float = _mm256_sqrt_ps(sum_squared_float);
+
+            // Convert back to integer and store
+            __m256i gradient_int = _mm256_cvtps_epi32(gradient_float);
+            __m256i gradient_byte = _mm256_packus_epi32(gradient_int, _mm256_setzero_si256());
+            gradient_byte = _mm256_permute4x64_epi64(gradient_byte, 0xD8); // Reorder the packed results
+            _mm_storeu_si128((__m128i*)&gradient[M * row + col], _mm256_castsi256_si128(gradient_byte));
         }
     }
-
-
 }
 
 void read_image(char* filename)

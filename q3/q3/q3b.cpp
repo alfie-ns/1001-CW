@@ -97,8 +97,9 @@ int main(int argc, char* argv[]) {
 
     // loop through all files in the input directory
     for (const auto& entry : std::filesystem::directory_iterator(inputDirectoryPath)) {
-        std::string filename = entry.path().filename(); // sets filename to the current file
+        // begin directory iteration
 
+        std::string filename = entry.path().filename(); // sets filename to the current file
 
         char* inFile = new char[inputDirectoryPath.length() + filename.length() + 2];
         strcpy(inFile, (inputDirectoryPath + "/" + filename).c_str());

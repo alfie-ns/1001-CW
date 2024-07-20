@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# to run menu script clone: https://github.com/alfie-ns/1001-CW
+# to run this menu script clone: https://github.com/alfie-ns/1001-CW
 # ---------------------------------------------------------------
 
 # Formatting functions
@@ -157,7 +157,7 @@ EOF
 print_ascii_art() {
     cat << "EOF"
 -----------------------------------------
-| ⚙️ Image Processor ⚙️                  |
+| ⚙️ Image Processor ⚙️                    |
 -----------------------------------------
 |         _  __ _                        |
 |   __ _ | |/ _(_) ___       _ __  ___   | 

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # to run menu script clone: https://github.com/alfie-ns/1001-CW
+# ---------------------------------------------------------------
 
 # Formatting functions
 print_bold() { tput bold; echo -e "$1"; tput sgr0; } # tput sgr0 resets text formatting

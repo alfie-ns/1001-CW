@@ -193,10 +193,10 @@ while true; do
             ;;
         4) show_help ;;
         5) 
-            print_bold "\nExiting...\n\nCleaning up..."
+            print_bold "\nExiting...\n"
             if [ -f "./clear.sh" ]; then
                 ./clear.sh
-                print_green "Cleanup complete."
+                print_green "q3-images/output_images cleaned."
             else
                 print_yellow "Warning: clear.sh not found. Skipping cleanup."
             fi

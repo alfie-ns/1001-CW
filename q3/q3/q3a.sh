@@ -1,9 +1,8 @@
 #!/bin/bash
 
-# Compile C++ program
-if g++ -o q3 ../../q3/q3a.cpp -lm; then
-    echo "q3a.cpp compiled successfully"
-else
+# Compile C++ program q3a.cpp
+if g++ -o q3 ../../q3/q3a.cpp -lm; then echo "q3a.cpp compiled successfully"
+else #if compilation fails, echu error and exit with status 1: failure
     echo "Error: q3a.cpp did not compile successfully"
     exit 1 #failure
 fi

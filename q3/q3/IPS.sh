@@ -1,21 +1,30 @@
 #!/bin/bash
 
 # Title: Image Processing Script(IPS)
-# Description: This is a indefinitely run menu-driven script that allows the user to process, view, and remove images.
+# Description: This is an indefinitely running menu-driven script that allows the user to process, view, and remove images.
 # Author: Alfie Nurse 
 # GitHub: https://github.com/alfie-ns/1001-cw
+
+#         _  __ _                     
+#   __ _ | |/ _(_) ___       _ __  ___
+#  / _` || | |_| |/ _ \_____| '_ \/ __|
+# | (_| || |  _| |  __/_____| | | \__ \
+#  \__,_||_|_| |_|\___|     |_| |_|___/
+#  
+
+# ---------------------------------------------------------------------------------------------------------------------------
 
 # Usage: Clone the repo to run the IPS script. Ensure .pgm images are in 'q3-images/input_images' directory.
 
 # Functions ------------------------------------------------------------------------------------------------------------------
 
 # Formatting functions
-print_bold() { tput bold; echo -e "$1"; tput sgr0; } # tput bold == bold test
-print_blue() { tput setaf 4; echo -e "$1"; tput sgr0; }
-print_green() { tput setaf 2; echo -e "$1"; tput sgr0; }
-print_red() { tput setaf 1; echo -e "$1"; tput sgr0; }
-print_yellow() { tput setaf 3; echo -e "$1"; tput sgr0; }
-# tput sgr0; == reset all attributes
+print_bold() { tput bold; printf "%s\n" "$1"; tput sgr0; } # tput bold == bold test
+print_blue() { tput setaf 4; printf "%s\n" "$1"; tput sgr0; }
+print_green() { tput setaf 2; printf "%s\n" "$1"; tput sgr0; }
+print_red() { tput setaf 1; printf "%s\n" "$1"; tput sgr0; }
+print_yellow() { tput setaf 3; printf "%s\n" "$1"; tput sgr0; }
+# tput sgr0; == reset all attributes, so text is not bold anymore at the end
 # tput setaf {n}; == colour codes
 
 # Error checking function
@@ -34,7 +43,7 @@ show_progress() {
     local duration=${2:-3} # Default to 3 seconds if not specified
     local steps=20 # Number of steps in the progress bar
     local delay=$(bc <<< "scale=3; $duration / $steps") # Calculate delay per step
-    
+    # loop will continue to execute as long as the process with the given PID ($pid) is still running
     while kill -0 $pid 2>/dev/null; do # While process is NOT dead
         for ((i=0; i<=steps; i++)); do # Loop through steps one-by-one
             printf "\rProcessing: [" # Print start of progress bar
@@ -146,31 +155,26 @@ remove_images() {
 }
 
 show_menu() {
-    cat << EOF
-$(print_bold "    🖼️  Image Processing Menu 🖼️")
-$(print_yellow "    1) Process images")
-$(print_yellow "    2) View output images")
-$(print_yellow "    3) Remove output images")
-$(print_yellow "    4) Help")
-$(print_yellow "    5) Exit")
-EOF
+    printf "%s\n" "$(print_bold "    🖼️  Image Processing Menu 🖼️")"
+    printf "%s\n" "$(print_yellow "    1) Process images")"
+    printf "%s\n" "$(print_yellow "    2) View output images")"
+    printf "%s\n" "$(print_yellow "    3) Remove output images")"
+    printf "%s\n" "$(print_yellow "    4) Help")"
+    printf "%s\n" "$(print_yellow "    5) Exit")"
 }
-
+# function to show help information
 show_help() {
     clear
-    cat << EOF
-$(print_bold "\n📘 Help Information:")
-$(print_blue "1. Process images:") Compiles and runs the image processing program.
-$(print_blue "2. View output images:") Opens processed images and shows statistics.
-$(print_blue "3. Remove output images:") Clears all processed images.
-$(print_blue "4. Help:") Displays this help information.
-$(print_blue "5. Exit:") Quits the program and cleans up.
-
-$(print_yellow "Note:") Ensure input images are in 'q3-images/input_images' directory.
-EOF
+    printf "%s\n" "$(print_bold "\n📘 Help Information:")"
+    printf "%s\n" "$(print_blue "1. Process images:") Compiles and runs the image processing program."
+    printf "%s\n" "$(print_blue "2. View output images:") Opens processed images and shows statistics."
+    printf "%s\n" "$(print_blue "3. Remove output images:") Clears all processed images."
+    printf "%s\n" "$(print_blue "4. Help:") Displays this help information."
+    printf "%s\n" "$(print_blue "5. Exit:") Quits the program and cleans up."
+    printf "\n%s\n" "$(print_yellow "Note:") Ensure input images are in 'q3-images/input_images' directory."
 }
 
-print_ascii_art() {
+print_ascii() {
     cat << "EOF"
          _  __ _                     
    __ _ | |/ _(_) ___       _ __  ___
@@ -183,7 +187,7 @@ EOF
 
 # Main -----------------------------------------------------------------------------------------------------------------------
 clear # Clear the terminal first
-print_ascii_art # Print ASCII art
+print_ascii # Print ASCII art
 print_bold "C++ Image Processing Script" # Print bold title
 while true; do # Infinite loop
     echo # Print newline

@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Title: Image Processing Script(IPS)
+# Description: This is a indefinitely run menu-driven script that allows the user to process, view, and remove images.
+# Author: Alfie Nurse 
+# GitHub: https://github.com/alfie-ns/1001-cw
+
+# Usage: Clone the repo to run the IPS script. Ensure .pgm images are in 'q3-images/input_images' directory.
+
+# Functions ------------------------------------------------------------------------------------------------------------------
+
 # Formatting functions
 print_bold() { tput bold; echo -e "$1"; tput sgr0; } # tput bold == bold test
 print_blue() { tput setaf 4; echo -e "$1"; tput sgr0; }
@@ -202,6 +211,8 @@ while true; do # Infinite loop
             print_bold "\nExiting...\n"
             remove_images
             print_green "Cleaned up output images."
+            sleep 3
+            clear
             exit 0
             ;;
         *) # If user input is anything else apart from 1-5

@@ -1,9 +1,12 @@
 #!/bin/bash
 
+# TEST ON DELL [ ] 
+
 print_green() { tput setaf 2; echo -e "$1"; tput sgr0; } # tput setaf 2 == green text
 print_red() { tput setaf 1; echo -e "$1"; tput sgr0; } # tput setaf 1 == red text
-# -e: interpret backslash escapes
-# tput sgr0: reset all attributes(so doesn't affect future text)
+# -e: interpret backslash escapes - allows for more advanced text formatting and control characters
+# echo the first argument ($1) in the predefined color eg: print_green 'test' where 'test' is $1
+# tput sgr0: reset all attributes (so don't affect future text)
 
 # Compile C++ program q3a.cpp
 if g++ -o q3 q3a.cpp -lm; then print_green "q3a.cpp compiled successfully!"

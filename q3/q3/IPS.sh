@@ -15,6 +15,7 @@
 # ---------------------------------------------------------------------------------------------------------------------------
 
 # Usage: Clone the repo to run the IPS script. Ensure .pgm images are in 'q3-images/input_images' directory.
+# https://github.com/alfie-ns/1001-CW
 
 # Functions ------------------------------------------------------------------------------------------------------------------
 
@@ -139,17 +140,17 @@ view_images() {
     print_green "Found $image_count image(s)."
     return 0 #success
 }
-
+# function to remove output images
 remove_images() {
     clear # Clear the terminal first
-    print_yellow "\nRemoving output images..."
+    print_yellow "Removing output images..."
     
     rm -f image_processor # Remove the compiled program
     if [ -d "q3-images/output_images" ]; then # If output directory exists
         rm -f q3-images/output_images/* # Remove all files in output directory
         print_green "Output images removed."
     else
-        print_yellow "Output directory not found. Nothing to remove."
+        print_yellow "Output directory not empty. Nothing to remove."
     fi
     return 0 #success
 }
@@ -159,20 +160,20 @@ show_menu() {
     printf "%s\n" "$(print_yellow "    1) Process images")"
     printf "%s\n" "$(print_yellow "    2) View output images")"
     printf "%s\n" "$(print_yellow "    3) Remove output images")"
-    printf "%s\n" "$(print_yellow "    4) Help")"
-    printf "%s\n" "$(print_yellow "    5) Exit")"
+    #printf "%s\n" "$(print_yellow "    4) Help")"
+    printf "%s\n" "$(print_yellow "    4) Exit")"
 }
 # function to show help information
-show_help() {
-    clear
-    printf "%s\n" "$(print_bold "\n📘 Help Information:")"
-    printf "%s\n" "$(print_blue "1. Process images:") Compiles and runs the image processing program."
-    printf "%s\n" "$(print_blue "2. View output images:") Opens processed images and shows statistics."
-    printf "%s\n" "$(print_blue "3. Remove output images:") Clears all processed images."
-    printf "%s\n" "$(print_blue "4. Help:") Displays this help information."
-    printf "%s\n" "$(print_blue "5. Exit:") Quits the program and cleans up."
-    printf "\n%s\n" "$(print_yellow "Note:") Ensure input images are in 'q3-images/input_images' directory."
-}
+#show_help() {
+#    clear
+#    printf "%s\n" "$(print_bold "\n📘 Help Information:")"
+#    printf "%s\n" "$(print_blue "1. Process images:") Compiles and runs the image processing program."
+#    printf "%s\n" "$(print_blue "2. View output images:") Opens processed images and shows statistics."
+#    printf "%s\n" "$(print_blue "3. Remove output images:") Clears all processed images."
+#    printf "%s\n" "$(print_blue "4. Help:") Displays this help information."
+#    printf "%s\n" "$(print_blue "5. Exit:") Quits the program and cleans up."
+#    printf "\n%s\n" "$(print_yellow "Note:") Ensure input images are in 'q3-images/input_images' directory."
+#}
 
 print_ascii() {
     cat << "EOF"
@@ -192,7 +193,7 @@ print_bold "C++ Image Processing Script" # Print bold title
 while true; do # Infinite loop
     echo # Print newline
     show_menu # Show menu
-    read -p "$(print_bold "\nEnter your choice (1-5): ")" choice # Read user input
+    read -p "$(print_bold "Enter your choice (1-4): ")" choice # Read user input
     case $choice in # Case statement for user input
         1) # If user input is 1 process images
             if ! process_images; then
@@ -209,8 +210,7 @@ while true; do # Infinite loop
                 print_red "Failed to remove images."
             fi
             ;;
-        4) show_help ;; # If user input is 4 show help
-        5)  # If user input is 5 exit while clearing images
+        4)  # If user input is 4 exit while clearing images
             clear
             print_bold "\nExiting...\n"
             remove_images
@@ -219,10 +219,12 @@ while true; do # Infinite loop
             clear
             exit 0
             ;;
-        *) # If user input is anything else apart from 1-5
+        *) # If user input is anything else apart from 1-4
             clear
             print_red "\nInvalid option. Please choose a number between 1 and 5."
             ;;
     esac # End case statement
     echo # Print newline
 done
+
+#4) show_help ;; # If user input is 4 show help

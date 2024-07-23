@@ -149,7 +149,8 @@ int main() {
     return 0; // return 0 to indicate that program has finished successfully
 }
 /*
-    
+    NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW NEW
+
     Routine1: y[i] = (alpha * y[i]) + (beta * z[i]);
     Routine2: w[i] = w[i] = (w[i] - beta) + (alpha * A[i][j] * x[j]);
 
@@ -158,10 +159,10 @@ int main() {
     M is the size of the arrays for routine1
     N is the size of the arrays for routine2
 
-    [x] Make routine1_vec
-    [x] Make routine2_vec
-    [x] Make copies of y and w arrays before running vectorised versions, for testing
-    [x] RESULTS DO NOT MATCH.
+    [X] Make routine1_vec
+    [X] Make routine2_vec
+    [X] Make copies of y and w arrays before running vectorised versions, for testing
+    [X] RESULTS DO NOT MATCH.
     [X] Make new routine2_vec
 
     https://github.com/alfie-ns/1001-CW
@@ -209,7 +210,7 @@ void initialize() {
 unsigned short int equal(float a, float b) {
     float temp = a - b;
     //printf("\n %f  %f", a, b);
-    if ((fabs(temp) / fabs(b)) < EPSILON)
+    if ((fabs(temp) / fabs(b)) < EPSILON) // if the difference between the two given floats is less than the tolerance/epsilon, return 0(considered equal)
         return 0; //success
     else
         return 1; //wrong result
@@ -219,7 +220,10 @@ unsigned short int equal(float a, float b) {
 
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ROUTINE1
+// ---------
 
+// ROUTINE1 | NON-OPTIMISED
 void routine1(float alpha, float beta) { // routine1: y[i] = alpha * y[i] + beta * z[i];
 
     unsigned int i; // loop counter
@@ -228,7 +232,8 @@ void routine1(float alpha, float beta) { // routine1: y[i] = alpha * y[i] + beta
         y[i] = (alpha * y[i]) + (beta * z[i]); // for each iteration of the array, i = (alpha * y[i]) + (beta * z[i])
 }
 
-// AVX implementation of routine1
+// OLD ROUTINE1 | VECTORISED
+/*
 void routine1_vec(float alpha, float beta) {
 
     unsigned int i; // loop counter, usigned so the computer knows it's not a negative number
@@ -256,12 +261,47 @@ void routine1_vec(float alpha, float beta) {
         _mm256_store_ps(&y[i], result_vec);
     }
 }
+*/
 
+// NEW ROUTINE1 | VECTORISED
+void routine1_vec(float alpha, float beta) {
+
+    unsigned int i; // loop counter, usigned so the computer knows it's not a negative number
+
+    // Create AVX vectors for alpha and beta
+    __m256 alpha_vec = _mm256_set1_ps(alpha); // set1_ps sets all elements of alpha to alpha_vec, which holds 8 elements
+    __m256 beta_vec = _mm256_set1_ps(beta); // set1_ps sets all elements of beta to beta_vec, which holds 8 elements
+
+    // alpha_vec = |0.023|0.023|0.023|0.023|0.023|0.023|0.023|0.023|
+    // beta_vec = |0.045|0.045|0.045|0.045|0.045|0.045|0.045|0.045|
+
+    // process 8 elements at a time for each iteration, until i reaches M
+    for (i = 0; i < M; i += 8) {
+
+        // & means the address of the variable, so &y[i] means the address of the y[i] variable
+        __m256 y_vec = _mm256_load_ps(&y[i]); // load 8 seperate iterated elements from y into AVX register 
+        __m256 z_vec = _mm256_load_ps(&z[i]); // load 8 seperate iterated elements from z into AVX register
+
+        // Perform the vectorized operations
+        __m256 result_vec = _mm256_add_ps(_mm256_mul_ps(alpha_vec, y_vec),_mm256_mul_ps(beta_vec, z_vec));
+        // result_vec = (alpha * y_vec) + (beta * z_vec)
+        // This is done for 8 elements at a time^
+
+        // Store the results back into the y array
+        _mm256_store_ps(&y[i], result_vec);
+    }
+
+    // Catch any remaining instances (continues from where previous loop left off)
+    for (; i < M; i++) {
+        y[i] = (alpha * y[i]) + (beta * z[i]);
+    }
+
+}
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // ROUTINE2
 
-// NON-OPTIMISED ROUTINE2
+// ROUTINE2 | NON-OPTIMISED
 void routine2(float alpha, float beta) {
 
     unsigned int i, j;

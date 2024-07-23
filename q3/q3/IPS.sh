@@ -62,7 +62,7 @@ process_images() {
     clear # Clear the terminal first
     print_blue "\nProcessing images..." # Print message in blue
     
-    # Check if the source file exists
+    # Check if q3b-mac.cpp is NOT found in the current directory
     if [ ! -f "q3b-mac.cpp" ]; then
         print_red "Error: q3b-mac.cpp not found in the current directory."
         print_yellow "Current directory contents:"
@@ -97,7 +97,7 @@ process_images() {
     
     # Run the image processor
     ./image_processor q3-images/input_images q3-images/output_images &
-    show_progress $! 2 & # Start process, show progress bar for 2 seconds, and run in background  
+    show_progress $! 2 & # Start process, show progress bar for 2 seconds, and run in background(&)  
     wait $! # Wait for the process to finish
     
     # Check if any output was produced

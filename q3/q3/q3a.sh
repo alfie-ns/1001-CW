@@ -4,7 +4,7 @@
 
 print_green() { tput setaf 2; echo -e "$1"; tput sgr0; } # tput setaf 2 == green text
 print_red() { tput setaf 1; echo -e "$1"; tput sgr0; } # tput setaf 1 == red text
-# -e: interpret backslash escapes - allows for more advanced text formatting and control characters
+# -e: interpret backslash escapes - allows for more advanced text formatting
 # echo the first argument ($1) in the predefined color eg: print_green 'test' where 'test' is $1
 # tput sgr0: reset all attributes (so don't affect future text)
 
@@ -15,17 +15,10 @@ else #if compilation fails, echo error and exit with status 1: failure
     exit 1 #failure
 fi 
 
-# Old:
 # Create variables to hold the image locations. Use the full path name for each image.
-#input_image=../../q3-images/input_images/a1.pgm
-#blur_image=../../q3-images/output_images/blurred.pgm
-#edge_image=../../q3-images/output_images/edge_detected.pgm
-
-# New:
-# Create variables to hold the image locations. Use the full path name for each image.
-input_image=q3-images/input_images/a2.pgm
-blur_image=q3-images/output_images/blurred.pgm
-edge_image=q3-images/output_images/edge_detected.pgm
+input_image=../../q3-images/input_images/a1.pgm
+blur_image=../../q3-images/output_images/blurred.pgm
+edge_image=../../q3-images/output_images/edge_detected.pgm
 
 # Run program, passing the variables for the 3 image locations
 if ./q3 $input_image $blur_image $edge_image; then
@@ -46,9 +39,6 @@ located in the q3 directory, creating a
 Linux-compatible executable. Include the math
 library by specifying -lm in the compilation command.
 
-Note: This time my directory structure is different,
-      thus I don't need to (..) back out of directories
-      when specifiying the full path to the images.
 
 END
 

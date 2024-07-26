@@ -379,7 +379,7 @@ void routine2_vec(float alpha, float beta) {
 
     /*
     [[X]] 
-    [X] First, you needed to use hadd instruction to add all the values in sum_vec.
+    [X] First, you needed to use hadd instruction so as to add all the values in sum_vec.
     [X] Second, you needed to load/store one element of w[i] not eight. Right now you store
         8 elements in memory and you overwrite the output; this is problematic in the last
         7 iterations as you store outside of the array's bounds.
@@ -399,7 +399,7 @@ void routine2_vec(float alpha, float beta) {
             // (w[i] - beta) + ((alpha * A[i][j]) * x[j]);
             __m256 sum_vec = _mm256_setzero_ps(); // init sum_vec before accumulation
             __m256 w_vec = _mm256_set1_ps(w[i]); // Broadcast w[i] into all 8 elements of the AVX vector w_vec
-            __m256 w_minus_beta_vec = _mm256_sub_ps(w_vec, beta_vec); // init w_minus_beta_vec as (w[i] - beta)
+            __m256 w_minus_beta_vec = _mm256_sub_ps(w_vec, beta_vec);
 
             for (j = 0; j < N - 7; j += 8) { // begin vectorisation, process 8 elements at a time
                 __m256 a_vec = _mm256_load_ps(&A[i][j]); // load 8 elements from A
@@ -412,7 +412,7 @@ void routine2_vec(float alpha, float beta) {
                 // 3. C = (w[i] - beta) + B
                 __m256 vec_C = _mm256_add_ps(w_minus_beta_vec, vec_B);
                 // 4. accumulate the sum
-                //sum_vec = _mm256_add_ps(sum_vec, vec_C);
+                sum_vec = _mm256_add_ps(sum_vec, vec_C);
             }
 
             // Catch any remaining instances (continues from where previous loop left off)
@@ -435,11 +435,11 @@ void routine2_vec(float alpha, float beta) {
 
             sum_lo = lower 128 bits of sum_vec
             sum_hi = upper 128 bits of sum_vec
-            sum_128 = adds the two 128-bit vectors (sum_lo + sum_hi) using horizontal addition
+            sum_128 = adds the two 128-bit vectors (sum_lo + sum_hi)
 
             */
             __m128 sum_lo = _mm256_castps256_ps128(sum_vec); 
-            __m128 sum_hi = _mm256_extractf128_ps(sum_vec, 1); // 1 to specify the upper half
+            __m128 sum_hi = _mm256_extractf128_ps(sum_vec, 1); 
             __m128 sum_128 = _mm_add_ps(sum_lo, sum_hi); 
             sum_128 = _mm_hadd_ps(sum_128, sum_128);
             sum_128 = _mm_hadd_ps(sum_128, sum_128);
@@ -448,13 +448,40 @@ void routine2_vec(float alpha, float beta) {
             float sum = _mm_cvtss_f32(sum_128); // Convert the lower 32 bits (first element) of the 128-bit vector to a scalar float
             sum += sum_remainder; // add the remainder sum
             /*
+            
+            First horizontal add: [a+b, c+d, a+b, c+d]
+            Second horizontal add: [a+b+c+d, a+b+c+d, a+b+c+d, a+b+c+d]
+            ----------------------------------------------------------------------------
+            sum_vec (256-bit AVX register):
+            [a    |    b    |    c    |    d    |    e    |    f    |    g    |    h   ]
+             <--- 32 bits each float, 8 floats total, 32*8 = 256 bits --->
+
+            Operations performed:
+            1. sum_lo = _mm256_castps256_ps128(sum_vec)
+               [a    |    b    |    c    |    d   ]  (Lower 128 bits)
+
+            2. sum_hi = _mm256_extractf128_ps(sum_vec, 1)
+               [e    |    f    |    g    |    h   ]  (Upper 128 bits)
+
+            3. sum_128 = _mm_add_ps(sum_lo, sum_hi)
+               [a+e  |  b+f   |  c+g   |  d+h  ]  (Result is 128 bits)
+
+            Subsequent horizontal additions (_mm_hadd_ps):
+            4. First hadd:  [(a+e)+(b+f) | (c+g)+(d+h) | (a+e)+(b+f) | (c+g)+(d+h)]
+            5. Second hadd: [(a+e)+(b+f)+(c+g)+(d+h) | (a+e)+(b+f)+(c+g)+(d+h) |... ]
+                             
+            Final scalar result = sum of all elements
+            -----------------------------------------------------------------------------
+
+
             _mm_cvtss_f32 extracts the lowest 32 bits (first float) from the 128-bit vector.
             After the horizontal additions, this lowest 32-bit float contains the total sum of the original vector elements.
-            We extract this first float as it contains the desired sum, since all 4 floats are the same it doesn't
+            We extract this first float as it contains our desired sum, since all 4 floats are the same, it doesn't
             matter which one is extracted, however extracting the first is the most efficient because
-            it uses the least instructions, similar to using _mm256_castps256_ps128 to extract the lower 128 bits.
+            it uses the least instructions.
 
-            Finally, remember to add the remainder sum to the total sum; then store the result in w[i] for each iteration
+
+            Finally, add the remainder sum to the total sum; then store the result in w[i] for each iteration
             
             */
             // Store result

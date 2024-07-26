@@ -412,7 +412,7 @@ void routine2_vec(float alpha, float beta) {
                 // 3. C = (w[i] - beta) + B
                 __m256 vec_C = _mm256_add_ps(w_minus_beta_vec, vec_B);
                 // 4. accumulate the sum
-                //sum_vec = _mm256_add_ps(sum_vec, vec_C);
+                sum_vec = _mm256_add_ps(sum_vec, vec_C);
             }
 
             // Catch any remaining instances (continues from where previous loop left off)

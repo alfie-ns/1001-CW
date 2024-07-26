@@ -4,12 +4,12 @@
 
 print_green() { tput setaf 2; echo -e "$1"; tput sgr0; } # tput setaf 2 == green text
 print_red() { tput setaf 1; echo -e "$1"; tput sgr0; } # tput setaf 1 == red text
-# -e: interpret backslash escapes - allows for more advanced text formatting
+# -e: interpret backslash escapes - allows for more advanced text formatting(newlines etc)
 # echo the first argument ($1) in the predefined color eg: print_green 'test' where 'test' is $1
 # tput sgr0: reset all attributes (so don't affect future text)
 
 # Compile C++ program q3a.cpp, if successful print success message, else print error message
-if g++ -o q3 q3a.cpp -lm; then print_green "q3a.cpp compiled successfully!"
+if g++ -o q3 ../../q3/main_linux.cpp -lm; then print_green "q3a.cpp compiled successfully!"
 else #if compilation fails, echo error and exit with status 1: failure
     print_red "Error: q3a.cpp did not compile successfully..."
     exit 1 #failure
@@ -39,6 +39,9 @@ located in the q3 directory, creating a
 Linux-compatible executable. Include the math
 library by specifying -lm in the compilation command.
 
+I am trying to mirror the old q3a.sh script, but
+with if statements and print_green and print_red
+functions.
 
 END
 

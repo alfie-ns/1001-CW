@@ -8,7 +8,7 @@ print_red() { tput setaf 1; echo -e "$1"; tput sgr0; } # tput setaf 1 == red tex
 # echo the first argument ($1) in the predefined color eg: print_green 'test' where 'test' is $1
 # tput sgr0: reset all attributes (so don't affect future text)
 
-# Compile C++ program q3a.cpp
+# Compile C++ program q3a.cpp, if successful print success message, else print error message
 if g++ -o q3 q3a.cpp -lm; then print_green "q3a.cpp compiled successfully!"
 else #if compilation fails, echo error and exit with status 1: failure
     print_red "Error: q3a.cpp did not compile successfully..."
@@ -20,7 +20,7 @@ input_image=../../q3-images/input_images/a1.pgm
 blur_image=../../q3-images/output_images/blurred.pgm
 edge_image=../../q3-images/output_images/edge_detected.pgm
 
-# Run program, passing the variables for the 3 image locations
+# Run program, passing the variables for the 3 image locations, if run successfully print success message, else print error message
 if ./q3 $input_image $blur_image $edge_image; then
     print_green "q3a.sh executed successfully!"
     exit 0 #success

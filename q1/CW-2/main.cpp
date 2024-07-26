@@ -221,7 +221,6 @@ unsigned short int equal(float a, float b) {
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // ROUTINE1
-// ---------
 
 // ROUTINE1 | NON-OPTIMISED
 void routine1(float alpha, float beta) { // routine1: y[i] = alpha * y[i] + beta * z[i];
@@ -398,7 +397,7 @@ void routine2_vec(float alpha, float beta) {
 
         // Outer loop: ensure we're only loading/storing one element of w[i] at a time, thus not overwriting output
         for (i = 0; i < N; i++) {
-
+            // (w[i] - beta) + ((alpha * A[i][j]) * x[j]);
             __m256 sum_vec = _mm256_setzero_ps(); // init sum_vec before accumulation
             __m256 w_vec = _mm256_set1_ps(w[i]); // Broadcast w[i] into all 8 elements of the AVX vector w_vec
             __m256 w_minus_beta_vec = _mm256_sub_ps(w_vec, beta_vec);
@@ -413,7 +412,7 @@ void routine2_vec(float alpha, float beta) {
                 __m256 vec_B = _mm256_mul_ps(vec_A, x_vec);
                 // 3. C = (w[i] - beta) + B
                 __m256 vec_C = _mm256_add_ps(w_minus_beta_vec, vec_B);
-                // 4. accum the result
+                // 4. accumulate the sum
                 sum_vec = _mm256_add_ps(sum_vec, vec_C);
             }
 

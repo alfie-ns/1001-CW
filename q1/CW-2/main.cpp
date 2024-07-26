@@ -51,9 +51,9 @@ int main() {
     float alpha = 0.023f; // float value of 0.023 for beta alpha variable
     float beta = 0.045f; // float value of 0.045 for float beta variable
 
-    double run_time; // double variable to store the execution time, for testing 
+    double run_time; // double variable to store the execution time, for testing
     double start_time; // double variable to store the start time, for testing
-    
+   
     unsigned int t; // unsigned int variable to store the number of times the routines are executed
 
     initialize(); // initialise the arrays
@@ -65,25 +65,25 @@ int main() {
 
     for (t = 0; t < TIMES1; t++) // for loop to execute routine1 TIMES1 times
         routine1(alpha, beta); // init with alpha and beta
-    
+   
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
     std::copy(y, y + M, y_copy); // copy routine1 to test comparison with vectorised version, y+M to check for last element
 
-    initialize(); // reinitialise the arrays 
+    initialize(); // reinitialise the arrays
 
     printf("\nRoutine2:");
     start_time = omp_get_wtime(); //start timer
 
     for (t = 0; t < TIMES2; t++)
         routine2(alpha, beta);
-    
-    
+   
+   
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // print testing
     std::copy(w, w + N, w_copy); // copy routine2 to test comparison with vectorised version, w+N to check for last element
-    
-    initialize(); // reinitialise arrays 
+   
+    initialize(); // reinitialise arrays
 
     printf("\n-----------------VECTORISED------------------------------\n");
 
@@ -96,7 +96,7 @@ int main() {
 
     run_time = omp_get_wtime() - start_time; //end timer
     printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS1) / ((double)run_time / TIMES1)); // print testing
-    
+   
     initialize(); // reinitialise the arrays
 
     printf("\nRoutine2_vec:");
@@ -108,7 +108,7 @@ int main() {
     // w an array of size M, w_copy is a copy of w, w_copy+M to know when to stop copying
 
     run_time = omp_get_wtime() - start_time; //end timer
-    printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); // 
+    printf("\n Time elapsed is %f secs \n %e FLOPs achieved\n", run_time, (double)(ARITHMETIC_OPERATIONS2) / ((double)run_time / TIMES2)); //
 
     printf("\n");
 
@@ -136,7 +136,7 @@ int main() {
                 arraysAreEqual = true;
                 break;
             }
-            
+           
         }
     }
     if (arraysAreEqual) {
@@ -248,7 +248,7 @@ void routine1_vec(float alpha, float beta) {
     for (i = 0; i < M; i += 8) {
 
         // & means the address of the variable, so &y[i] means the address of the y[i] variable
-        __m256 y_vec = _mm256_load_ps(&y[i]); // load 8 seperate iterated elements from y into AVX register 
+        __m256 y_vec = _mm256_load_ps(&y[i]); // load 8 seperate iterated elements from y into AVX register
         __m256 z_vec = _mm256_load_ps(&z[i]); // load 8 seperate iterated elements from z into AVX register
 
         // Perform the vectorized operations
@@ -278,7 +278,7 @@ void routine1_vec(float alpha, float beta) {
     for (i = 0; i < M; i += 8) {
 
         // & means the address of the variable, so &y[i] means the address of the y[i] variable
-        __m256 y_vec = _mm256_load_ps(&y[i]); // load 8 seperate iterated elements from y into AVX register 
+        __m256 y_vec = _mm256_load_ps(&y[i]); // load 8 seperate iterated elements from y into AVX register
         __m256 z_vec = _mm256_load_ps(&z[i]); // load 8 seperate iterated elements from z into AVX register
 
         // Perform the vectorized operations
@@ -315,30 +315,30 @@ void routine2(float alpha, float beta) {
 // OLD ROUTINE2 | VECTORISED
 void routine2_vec(float alpha, float beta) {
 
-    unsigned int i = 0, j = 0; // init loop counters with 0 for i and j, 
+    unsigned int i = 0, j = 0; // init loop counters with 0 for i and j,
 
         set1_ps sets all elements of alpha and beta to a vector
         which each hold 8 elements. It could also be said to broadcast the values
         to all elements of the 256-bit vector, you replicate a
         single float value across all elements of each 256-bit vector
 
-    
+   
 
     __m256 alpha_vec = _mm256_set1_ps(alpha);
     __m256 beta_vec = _mm256_set1_ps(beta);
 
     for (i = 0; i < N; i++) { // outer-loop for rows of matrix A and vector.
 
-    
+   
             Initializes three 256-bit vectors, each vector set to its respective current
             values: A[i][j], x[j], and w[j], for parallel processing.
-    
+   
 
         __m256 a_vec = _mm256_set1_ps(A[i][j]);
         __m256 x_vec = _mm256_set1_ps(x[j]);
         __m256 w_vec = _mm256_set1_ps(w[j]);
 
-        // outer loop for rows of matrix A and vector. 
+        // outer loop for rows of matrix A and vector.
         __m256 sum_vec = _mm256_setzero_ps(); // Initialise the accumulator vector as zero
 
         for (j = 0; j < N; j += 8) { // vectorisation beins, process 8 elements at a time
@@ -347,25 +347,25 @@ void routine2_vec(float alpha, float beta) {
             __m256 w_vec = _mm256_load_ps(&w[i]); // Load elements from w
             __m256 x_vec = _mm256_load_ps(&x[j]); // Load elements from x
 
-            
+           
              
                (w[i] - beta) + ((alpha * A[i][j]) * x[j]);
                 Order of Operations:
 
-                1. A = alpha*A[i][j] 
-                2. B = A*x[j] 
-                3. C = (w[i]-beta) 
+                1. A = alpha*A[i][j]
+                2. B = A*x[j]
+                3. C = (w[i]-beta)
                 4. sum_vec = B+C
 
                 ^^This is process happens 8-times in a single-iteration^^
 
-            
-          
+           
+         
             __m256 vec_A = _mm256_mul_ps(alpha_vec, a_vec); // (alpha*A[i][j])
             __m256 vec_B = _mm256_mul_ps(vec_A, x_vec); // (vec_A) * x[j]
             __m256 vec_C = _mm256_sub_ps(w_vec, beta_vec); // Compute (w[i] - b)
 
-            // sum up elements 8 times in a single-iteration 
+            // sum up elements 8 times in a single-iteration
             sum_vec = _mm256_add_ps(vec_B, vec_C);
         }
 
@@ -378,7 +378,7 @@ void routine2_vec(float alpha, float beta) {
 // NEW ROUTINE2 | VECTORISED
 
     /*
-    [[X]] 
+    [[X]]
     [X] First, you needed to use hadd instruction to add all the values in sum_vec.
     [X] Second, you needed to load/store one element of w[i] not eight. Right now you store
         8 elements in memory and you overwrite the output; this is problematic in the last
@@ -411,8 +411,8 @@ void routine2_vec(float alpha, float beta) {
                 __m256 vec_B = _mm256_mul_ps(vec_A, x_vec);
                 // 3. C = (w[i] - beta) + B
                 __m256 vec_C = _mm256_add_ps(w_minus_beta_vec, vec_B);
-                // 4. accumulate the sum
-                //sum_vec = _mm256_add_ps(sum_vec, vec_C);
+                // 4. Accumulate sum_vec to complete the formula BEFORE horizontal addition
+                sum_vec = _mm256_add_ps(sum_vec, vec_C);
             }
 
             // Catch any remaining instances (continues from where previous loop left off)
@@ -430,7 +430,7 @@ void routine2_vec(float alpha, float beta) {
             _mm246_castps256_ps128: Returns the lower 128 bits of a 256-bit floating-point vector of [8 x float] as a 128-bit floating-point vector of [4 x float].
             _mm256_extractf128_ps: Extract 128-bit from the upper half, 1 specifies the upper half
 
-            _mm256_extractf128_ps could be used to extract the lower-half, however it has an additional argument, 
+            _mm256_extractf128_ps could be used to extract the lower-half, however it has an additional argument,
             where as _mm256_castps256_ps128 immediately expects the lower-half thus is more efficient.
 
             sum_lo = lower 128 bits of sum_vec
@@ -438,9 +438,9 @@ void routine2_vec(float alpha, float beta) {
             sum_128 = adds the two 128-bit vectors (sum_lo + sum_hi) using horizontal addition
 
             */
-            __m128 sum_lo = _mm256_castps256_ps128(sum_vec); 
+            __m128 sum_lo = _mm256_castps256_ps128(sum_vec);
             __m128 sum_hi = _mm256_extractf128_ps(sum_vec, 1); // 1 to specify the upper half
-            __m128 sum_128 = _mm_add_ps(sum_lo, sum_hi); 
+            __m128 sum_128 = _mm_add_ps(sum_lo, sum_hi);
             sum_128 = _mm_hadd_ps(sum_128, sum_128);
             sum_128 = _mm_hadd_ps(sum_128, sum_128);
 
@@ -455,11 +455,11 @@ void routine2_vec(float alpha, float beta) {
             it uses the least instructions, similar to using _mm256_castps256_ps128 to extract the lower 128 bits.
 
             Finally, remember to add the remainder sum to the total sum; then store the result in w[i] for each iteration
-            
+           
             */
             // Store result
             w[i] = sum;
-            
+           
         }
     }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

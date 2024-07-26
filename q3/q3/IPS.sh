@@ -3,7 +3,7 @@
 # Title: Image Processing Script(IPS)
 # Description: This is an indefinitely running menu-driven script that allows the user to process, view, and remove images.
 # Author: Alfie Nurse 
-# GitHub: https://github.com/alfie-ns/1001-cw
+# GitHub: https://github.com/alfie-ns/1001-CW
 
 #         _  __ _                     
 #   __ _ | |/ _(_) ___       _ __  ___

@@ -123,8 +123,8 @@ int main() {
             break;
         }
         else {
-			arraysAreEqual = true;
-		}
+            arraysAreEqual = true;
+        }
     }
     if (arraysAreEqual) {
         printf("Routine1 <-> Routine1_vec. Results match.\n");
@@ -132,16 +132,16 @@ int main() {
     arraysAreEqual = false;
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) { // 2d array iteration
-			if (equal(w_copy[i], w[i])) { // Use the equal function to compare elements
-            	arraysAreEqual = true;
-            	break;
+            if (equal(w_copy[i], w[i])) { // Use the equal function to compare elements
+                arraysAreEqual = true;
+                break;
             }
             
-		}
+        }
     }
     if (arraysAreEqual) {
-		printf("Routine2 <-> Routine2_vec: Results match.\n");
-	}
+        printf("Routine2 <-> Routine2_vec: Results match.\n");
+    }
     else {
         printf("Routine2_vec: Results do not match!\n");
     }
@@ -296,7 +296,6 @@ void routine1_vec(float alpha, float beta) {
     }
 
 }
-
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // ROUTINE2
 
@@ -375,7 +374,7 @@ void routine2_vec(float alpha, float beta) {
     }
 }
 */
-// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 // NEW ROUTINE2 | VECTORISED
 
     /*
@@ -432,7 +431,7 @@ void routine2_vec(float alpha, float beta) {
             _mm256_extractf128_ps: Extract 128-bit from the upper half, 1 specifies the upper half
 
             _mm256_extractf128_ps could be used to extract the lower-half, however it has an additional argument, 
-            where as _mm256_castps256_ps128 immediately expects the lower-half thus more efficient.
+            where as _mm256_castps256_ps128 immediately expects the lower-half thus is more efficient.
 
             sum_lo = lower 128 bits of sum_vec
             sum_hi = upper 128 bits of sum_vec
@@ -452,14 +451,37 @@ void routine2_vec(float alpha, float beta) {
             
             First horizontal add: [a+b, c+d, a+b, c+d]
             Second horizontal add: [a+b+c+d, a+b+c+d, a+b+c+d, a+b+c+d]
+            ----------------------------------------------------------------------------
+            sum_vec (256-bit AVX register):
+            [a    |    b    |    c    |    d    |    e    |    f    |    g    |    h   ]
+             <--- 32 bits each float, 8 floats total, 32*8 = 256 bits --->
+
+            Operations performed:
+            1. sum_lo = _mm256_castps256_ps128(sum_vec)
+               [a    |    b    |    c    |    d   ]  (Lower 128 bits)
+
+            2. sum_hi = _mm256_extractf128_ps(sum_vec, 1)
+               [e    |    f    |    g    |    h   ]  (Upper 128 bits)
+
+            3. sum_128 = _mm_add_ps(sum_lo, sum_hi)
+               [a+e  |  b+f   |  c+g   |  d+h  ]  (Result is 128 bits)
+
+            Subsequent horizontal additions (_mm_hadd_ps):
+            4. First hadd:  [(a+e)+(b+f) | (c+g)+(d+h) | (a+e)+(b+f) | (c+g)+(d+h)]
+            5. Second hadd: [(a+e)+(b+f)+(c+g)+(d+h) | (a+e)+(b+f)+(c+g)+(d+h) |... ]
+                             
+            Final scalar result = sum of all elements
+            -----------------------------------------------------------------------------
+
 
             _mm_cvtss_f32 extracts the lowest 32 bits (first float) from the 128-bit vector.
-            After the horizontal additions; this lowest 32-bit float contains the total sum of the original vector elements.
-            We specifically extract this first float as it contains our desired sum.
+            After the horizontal additions, this lowest 32-bit float contains the total sum of the original vector elements.
+            We extract this first float as it contains our desired sum, since all 4 floats are the same, it doesn't
+            matter which one is extracted, however extracting the first is the most efficient because
+            it uses the least instructions.
 
-            since all four floats are identical at this point, it doesn't matter which one we extract.
 
-            Finally, add the remainder sum to the total sum; then store the result in w[i] foe each i
+            Finally, add the remainder sum to the total sum; then store the result in w[i] for each iteration
             
             */
             // Store result

@@ -20,11 +20,11 @@
 # Functions ------------------------------------------------------------------------------------------------------------------
 
 # Formatting functions
-print_bold() { tput bold; printf "%s\n" "$1"; tput sgr0; } # tput bold == bold test
-print_blue() { tput setaf 4; printf "%s\n" "$1"; tput sgr0; }
-print_green() { tput setaf 2; printf "%s\n" "$1"; tput sgr0; }
-print_red() { tput setaf 1; printf "%s\n" "$1"; tput sgr0; }
-print_yellow() { tput setaf 3; printf "%s\n" "$1"; tput sgr0; }
+print_bold() { tput bold; echo -e "$1"; tput sgr0; } # tput bold == bold text
+print_blue() { tput setaf 4; echo -e "$1"; tput sgr0; }
+print_green() { tput setaf 2; echo -e "$1"; tput sgr0; }
+print_red() { tput setaf 1; echo -e "$1"; tput sgr0; }
+print_yellow() { tput setaf 3; echo -e "$1"; tput sgr0; }
 # tput sgr0; == reset all attributes, so text is not bold anymore at the end
 # tput setaf {n}; == colour codes
 

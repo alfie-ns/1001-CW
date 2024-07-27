@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# TEST ON DELL [ ] 
-
 print_green() { tput setaf 2; echo -e "$1"; tput sgr0; } # tput setaf 2 == green text
 print_red() { tput setaf 1; echo -e "$1"; tput sgr0; } # tput setaf 1 == red text
 # -e: interpret backslash escapes - allows for more advanced text formatting(newlines etc)

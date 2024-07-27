@@ -51,7 +51,7 @@ show_progress() {
             for ((j=0; j<i; j++)); do printf "#"; done # Print # for each step
             for ((j=i; j<steps; j++)); do printf " "; done # Print spaces for remaining steps
             printf "] %d%%" $(( i * 100 / steps )) # Print percentage
-            sleep $delay # Sleep delay for each iteration
+            sleep $delay # Sleep delay for each iteration (duration divided by steps)
         done
         printf "\r" # Move cursor back to start of line for next step/iteration
     done

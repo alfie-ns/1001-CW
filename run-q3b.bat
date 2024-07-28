@@ -27,6 +27,6 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-powershell -command "Write-Host 'q3b.cpp' -NoNewline -ForegroundColor Cyan; Write-Host ' executed successfully' -ForegroundColor Green"
+powershell -command "Write-Host 'q3/q3/q3b.cpp' -NoNewline -ForegroundColor Cyan; Write-Host ' compiled and executed successfully' -ForegroundColor Green"
 
 cd ..\..

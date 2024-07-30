@@ -4,7 +4,7 @@ if %errorlevel% neq 0 (
     echo Failed to change directory to q3\q3
     exit /b %errorlevel%
 )
-
+REM Create output_images
 if not exist "q3-images\output_images" (
     mkdir "q3-images\output_images"
     if %errorlevel% neq 0 (

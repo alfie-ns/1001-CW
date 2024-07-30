@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ---------------------------------------------------------------------------------------------------------------------------
-
+# RUN ONLY ON LINUX(only saying this because Windows breaks it)
 #         _  __ _                     
 #   __ _ | |/ _(_) ___       _ __  ___
 #  / _` || | |_| |/ _ \_____| '_ \/ __|
@@ -16,8 +16,7 @@
 # GitHub: https://github.com/alfie-ns/1001-cw
 
 # 🟣 Youtube video loader and conversational AI content advisor Python script: https://github.com/alfie-ns/vidbriefs-desktop 🟣
-
-# The previous python script is very easy to setup and run follow the readme.md instructions.
+# This python script is very easy to setup and run; follow the readme.md instructions.
 
 # ---------------------------------------------------------------------------------------------------------------------------
 
@@ -26,16 +25,15 @@
 
 # Functions ------------------------------------------------------------------------------------------------------------------
 
-# Formatting functions
-print_bold() { tput bold; printf "%s\n" "$1"; tput sgr0; } # Emphasis
-print_blue() { tput setaf 4; printf "%s\n" "$1"; tput sgr0; } # Important
-print_green() { tput setaf 2; printf "%s\n" "$1"; tput sgr0; } # Success
-print_red() { tput setaf 1; printf "%s\n" "$1"; tput sgr0; } # Error
-print_yellow() { tput setaf 3; printf "%s\n" "$1"; tput sgr0; } # Warning
+# Formatting functions: '%b' to interpret newlines
+print_red() { tput setaf 1; printf "%b\n" "$1"; tput sgr0; } # Error
+print_green() { tput setaf 2; printf "%b\n" "$1"; tput sgr0; } # Success
+print_yellow() { tput setaf 3; printf "%b\n" "$1"; tput sgr0; } # Warning
+print_blue() { tput setaf 4; printf "%b\n" "$1"; tput sgr0; } # Important
+print_bold() { tput bold; printf "%b\n" "$1"; tput sgr0; } # Emphasis
 # tput bold == bold test
 # tput sgr0; == reset all attributes, so text is not bold anymore after
 # tput setaf {n}; == colour codes
-
 
 # Error checking function
 check_command() {
@@ -89,10 +87,8 @@ process_images() {
         return 1
     fi
     
-    if clang++ -std=c++17 q3b-mac.cpp -o image_processor -O3 -lm; then
-    compiler="clang++" # Mac OS
-    elif g++ -std=c++17 q3b.cpp -o image_processor -O3 -lm; then
-        compiler="g++" # Linux/Windows
+    if clang++ -std=c++17 q3b-mac.cpp -o image_processor -O3 -lm; then compiler="clang++" # Mac OS
+    elif g++ -std=c++17 q3b.cpp -o image_processor -O3 -lm; then compiler="g++" # Linux
     else
         # Both compilers failed
         print_red "Error: Compilation failed with both clang++ and g++."

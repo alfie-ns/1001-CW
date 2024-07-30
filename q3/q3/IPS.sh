@@ -89,15 +89,6 @@ process_images() {
         return 1
     fi
     
-    # Compile the program
-    if ! clang++ -std=c++17 q3b-mac.cpp -o image_processor -O3 -lm; then # If cannot compile
-        # -std=c++17: Use C++17 standard, -o: Output file name, -O3: Optimization level 3, -lm: Link math library
-        print_red "Error: Compilation failed." # Print error message
-        return 1 #failure
-    fi
-
-    
-    
     if clang++ -std=c++17 q3b-mac.cpp -o image_processor -O3 -lm; then
     compiler="clang++" # Mac OS
     elif g++ -std=c++17 q3b.cpp -o image_processor -O3 -lm; then

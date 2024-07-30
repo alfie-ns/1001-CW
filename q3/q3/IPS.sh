@@ -5,28 +5,30 @@
 # Author: Alfie Nurse 
 # GitHub: https://github.com/alfie-ns/1001-CW
 
-#         _  __ _                     
+#        _  __ _                     
 #   __ _ | |/ _(_) ___       _ __  ___
 #  / _` || | |_| |/ _ \_____| '_ \/ __|
 # | (_| || |  _| |  __/_____| | | \__ \
 #  \__,_||_|_| |_|\___|     |_| |_|___/
 #  
 
-# ---------------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------------
 
 # Usage: Clone the repo to run the IPS script. Ensure .pgm images are in 'q3-images/input_images' directory.
 # https://github.com/alfie-ns/1001-CW
 
-# Functions ------------------------------------------------------------------------------------------------------------------
-
-# Formatting functions
-print_bold() { tput bold; echo -e "$1"; tput sgr0; } # tput bold == bold text
-print_blue() { tput setaf 4; echo -e "$1"; tput sgr0; }
-print_green() { tput setaf 2; echo -e "$1"; tput sgr0; }
-print_red() { tput setaf 1; echo -e "$1"; tput sgr0; }
-print_yellow() { tput setaf 3; echo -e "$1"; tput sgr0; }
+# Formatting functions -------------------------------------------------------------------------------------------------------
+print_bold() { tput bold; echo -e "$1"; tput sgr0; } # Emphasis
+print_blue() { tput setaf 4; echo -e "$1"; tput sgr0; } # Important
+print_green() { tput setaf 2; echo -e "$1"; tput sgr0; } # Success
+print_red() { tput setaf 1; echo -e "$1"; tput sgr0; } # Error
+print_yellow() { tput setaf 3; echo -e "$1"; tput sgr0; } # Warning
 # tput sgr0; == reset all attributes, so text is not bold anymore at the end
 # tput setaf {n}; == colour codes
+# tput bold == bold text
+
+# Functions ------------------------------------------------------------------------------------------------------------------
+
 
 # Error checking function
 check_command() {

@@ -10,13 +10,14 @@
 #
 
 # Title: Image Processing Script(IPS)
+# Language: Bash
 # Description: This is an indefinitely running menu-driven script that allows the user to process, view, and remove images.
 # Author: Alfie Nurse 
 # GitHub: https://github.com/alfie-ns/1001-cw
 
 # 🟣 Youtube video loader and conversational AI content advisor Python script: https://github.com/alfie-ns/vidbriefs-desktop 🟣
 
-# The previous python script is really easy to setup and run. Just follow the README.md instructions.
+# The previous python script is very easy to setup and run follow the readme.md instructions.
 
 # ---------------------------------------------------------------------------------------------------------------------------
 
@@ -64,6 +65,7 @@ show_progress() {
         printf "\r" # Move cursor back to start of line for next step/iteration
     done
     printf "Processing: [####################] 100%%\n"
+    # 20 hashtags/steps
 }
 
 process_images() {
@@ -93,12 +95,19 @@ process_images() {
         print_red "Error: Compilation failed." # Print error message
         return 1 #failure
     fi
+
     
-    # Make sure input directory exists and is not empty
-    if [ ! -d "q3-images/input_images" ] || [ -z "$(ls -A q3-images/input_images)" ]; then
-        print_red "Error: Input directory is missing or empty."
+    
+    if clang++ -std=c++17 q3b-mac.cpp -o image_processor -O3 -lm; then
+    compiler="clang++" # Mac OS
+    elif g++ -std=c++17 q3b.cpp -o image_processor -O3 -lm; then
+        compiler="g++" # Linux/Windows
+    else
+        # Both compilers failed
+        print_red "Error: Compilation failed with both clang++ and g++."
         return 1 #failure
     fi
+    
     
     # Create output directory if it doesn't exist
     mkdir -p q3-images/output_images

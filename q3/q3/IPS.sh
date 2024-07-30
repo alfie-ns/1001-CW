@@ -2,22 +2,21 @@
 
 # ---------------------------------------------------------------------------------------------------------------------------
 
-# Title: Image Processing Script(IPS)
-# Description: This is an indefinitely running menu-driven script that allows the user to process, view, and remove images.
-# Author: Alfie Nurse 
-# GitHub: https://github.com/alfie-ns/1001-cw
-
-# 🟣 Youtube video loader and chatbot python script: https://github.com/alfie-ns/vidbriefs-desktop 🟣
-
-# The previous python script is really eaay to setup and run. Just follow the README.md instructions.
-# ---------------------------------------------------------------------------------------------------------------------------
-
 #         _  __ _                     
 #   __ _ | |/ _(_) ___       _ __  ___
 #  / _` || | |_| |/ _ \_____| '_ \/ __|
 # | (_| || |  _| |  __/_____| | | \__ \
 #  \__,_||_|_| |_|\___|     |_| |_|___/
-#  
+#
+
+# Title: Image Processing Script(IPS)
+# Description: This is an indefinitely running menu-driven script that allows the user to process, view, and remove images.
+# Author: Alfie Nurse 
+# GitHub: https://github.com/alfie-ns/1001-cw
+
+# 🟣 Youtube video loader and conversational AI content advisor Python script: https://github.com/alfie-ns/vidbriefs-desktop 🟣
+
+# The previous python script is really easy to setup and run. Just follow the README.md instructions.
 
 # ---------------------------------------------------------------------------------------------------------------------------
 
@@ -27,21 +26,23 @@
 # Functions ------------------------------------------------------------------------------------------------------------------
 
 # Formatting functions
-print_bold() { tput bold; printf "%s\n" "$1"; tput sgr0; } # tput bold == bold test
-print_blue() { tput setaf 4; printf "%s\n" "$1"; tput sgr0; }
-print_green() { tput setaf 2; printf "%s\n" "$1"; tput sgr0; }
-print_red() { tput setaf 1; printf "%s\n" "$1"; tput sgr0; }
-print_yellow() { tput setaf 3; printf "%s\n" "$1"; tput sgr0; }
-# tput sgr0; == reset all attributes, so text is not bold anymore at the end
+print_bold() { tput bold; printf "%s\n" "$1"; tput sgr0; } # Emphasis
+print_blue() { tput setaf 4; printf "%s\n" "$1"; tput sgr0; } # Important
+print_green() { tput setaf 2; printf "%s\n" "$1"; tput sgr0; } # Success
+print_red() { tput setaf 1; printf "%s\n" "$1"; tput sgr0; } # Error
+print_yellow() { tput setaf 3; printf "%s\n" "$1"; tput sgr0; } # Warning
+# tput bold == bold test
+# tput sgr0; == reset all attributes, so text is not bold anymore after
 # tput setaf {n}; == colour codes
+
 
 # Error checking function
 check_command() {
     # Check if the command provided as the first argument ($1) is NOT available in system PATH
-    if ! command -v $1 &> /dev/null; then # &> redirects both stdout and stderr
+    if ! command -v $1 &> /dev/null; then # &> redirects both stdout and stderr to the null, discarding output if this fails
         print_red "Error: $1 is not installed or not in PATH." # Print error message with first argument
         return 1 #failure
-    fi #end if - if command succeeds
+    fi #end if also if command succeeds
     return 0 #success
 }
 

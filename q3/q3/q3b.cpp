@@ -81,7 +81,7 @@ char header[100];
 
 int main(int argc, char* argv[]) {
 
-    // compile with g++ -std=c++17 main.cpp -o q3 -O3 -lm
+    // compile with g++ q3b.cpp -o q3 -O3 -lm
 
     // make sure the user passes in the input and output directories after the executable
     if (argc != 3) {
@@ -98,21 +98,14 @@ int main(int argc, char* argv[]) {
     // loop through all files in the input directory
     for (const auto& entry : std::filesystem::directory_iterator(inputDirectoryPath)) {
         std::string filename = entry.path().filename(); // sets filename to the current file
-
-
-        char* inFile = new char[inputDirectoryPath.length() + filename.length() + 2];
-        strcpy(inFile, (inputDirectoryPath + "/" + filename).c_str());
-
-        char* blurFile = new char[outputDirectoryPath.length() + filename.length() + 6];
-        strcpy(blurFile, (outputDirectoryPath + "/blur_" + filename).c_str());
-
-        char* edgeFile = new char[outputDirectoryPath.length() + filename.length() + 16];
-        strcpy(edgeFile, (outputDirectoryPath + "/edge_detected_" + filename).c_str());
-
-        sprintf(inFile, "%s/%s", inputDirectoryPath.c_str(), filename.c_str());
-        sprintf(blurFile, "%s/blur_%s", outputDirectoryPath.c_str(), filename.c_str());
-        sprintf(edgeFile, "%s/edge_detected_%s", outputDirectoryPath.c_str(), filename.c_str());
-
+        
+        char inFile[256]; // path to input file
+        char blurFile[256]; // path to output blur file
+        char edgeFile[256]; // path to output edge file
+        // sizeof prevents buffer overflow, %s/%s formats path/filename, c_str() converts std::string to C-style string
+        snprintf(inFile, sizeof(inFile), "%s/%s", inputDirectoryPath.c_str(), filename.c_str());
+        snprintf(blurFile, sizeof(blurFile), "%s/blur_%s", outputDirectoryPath.c_str(), filename.c_str());
+        snprintf(edgeFile, sizeof(edgeFile), "%s/edge_detected_%s", outputDirectoryPath.c_str(), filename.c_str());
 
         printf("\nProcessing image: %s\n", inFile);
 

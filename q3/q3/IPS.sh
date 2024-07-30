@@ -12,11 +12,12 @@
 # Title: Image Processing Script(IPS)
 # Language: Bash
 # Description: This is an indefinitely running menu-driven script that allows the user to process, view, and remove images.
-# Author: Alfie Nurse 
 # GitHub: https://github.com/alfie-ns/1001-cw
 
-# 🔴 Youtube video loader and conversational AI content advisor Python script: https://github.com/alfie-ns/vidbriefs-desktop 🔴
-# This python script is very easy to setup and run; follow the readme.md instructions.
+# 🔴Vidbriefs-desktop: https://github.com/alfie-ns/vidbriefs-desktop/vidbriefs-desktop.py
+#                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# Youtube video loader and conversational AI content advisor Python script: https://github.com/alfie-ns/vidbriefs-desktop 🔴
+# This python script is very easy to setup and run; just follow the readme.md instructions.
 
 # ---------------------------------------------------------------------------------------------------------------------------
 

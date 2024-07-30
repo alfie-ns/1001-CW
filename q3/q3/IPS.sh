@@ -1,34 +1,39 @@
 #!/bin/bash
 
+# ---------------------------------------------------------------------------------------------------------------------------
+
 # Title: Image Processing Script(IPS)
 # Description: This is an indefinitely running menu-driven script that allows the user to process, view, and remove images.
 # Author: Alfie Nurse 
-# GitHub: https://github.com/alfie-ns/1001-CW
+# GitHub: https://github.com/alfie-ns/1001-cw
 
-#        _  __ _                     
+# 🟣 Youtube video loader and chatbot python script: https://github.com/alfie-ns/vidbriefs-desktop 🟣
+
+# The previous python script is really eaay to setup and run. Just follow the README.md instructions.
+# ---------------------------------------------------------------------------------------------------------------------------
+
+#         _  __ _                     
 #   __ _ | |/ _(_) ___       _ __  ___
 #  / _` || | |_| |/ _ \_____| '_ \/ __|
 # | (_| || |  _| |  __/_____| | | \__ \
 #  \__,_||_|_| |_|\___|     |_| |_|___/
 #  
 
-# ----------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------
 
 # Usage: Clone the repo to run the IPS script. Ensure .pgm images are in 'q3-images/input_images' directory.
 # https://github.com/alfie-ns/1001-CW
 
-# Formatting functions -------------------------------------------------------------------------------------------------------
-print_bold() { tput bold; echo -e "$1"; tput sgr0; } # Emphasis
-print_blue() { tput setaf 4; echo -e "$1"; tput sgr0; } # Important
-print_green() { tput setaf 2; echo -e "$1"; tput sgr0; } # Success
-print_red() { tput setaf 1; echo -e "$1"; tput sgr0; } # Error
-print_yellow() { tput setaf 3; echo -e "$1"; tput sgr0; } # Warning
-# tput sgr0; == reset all attributes, so text is not bold anymore at the end
-# tput setaf {n}; == colour codes
-# tput bold == bold text
-
 # Functions ------------------------------------------------------------------------------------------------------------------
 
+# Formatting functions
+print_bold() { tput bold; printf "%s\n" "$1"; tput sgr0; } # tput bold == bold test
+print_blue() { tput setaf 4; printf "%s\n" "$1"; tput sgr0; }
+print_green() { tput setaf 2; printf "%s\n" "$1"; tput sgr0; }
+print_red() { tput setaf 1; printf "%s\n" "$1"; tput sgr0; }
+print_yellow() { tput setaf 3; printf "%s\n" "$1"; tput sgr0; }
+# tput sgr0; == reset all attributes, so text is not bold anymore at the end
+# tput setaf {n}; == colour codes
 
 # Error checking function
 check_command() {
@@ -53,7 +58,7 @@ show_progress() {
             for ((j=0; j<i; j++)); do printf "#"; done # Print # for each step
             for ((j=i; j<steps; j++)); do printf " "; done # Print spaces for remaining steps
             printf "] %d%%" $(( i * 100 / steps )) # Print percentage
-            sleep $delay # Sleep delay for each iteration (duration divided by steps)
+            sleep $delay # Sleep delay for each iteration
         done
         printf "\r" # Move cursor back to start of line for next step/iteration
     done

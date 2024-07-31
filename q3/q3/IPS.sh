@@ -14,9 +14,11 @@
 # Description: This is an indefinitely running menu-driven script that allows the user to process, view, and remove images.
 # GitHub: https://github.com/alfie-ns/1001-cw
 
-# 🔴Vidbriefs-desktop: https://github.com/alfie-ns/vidbriefs-desktop/vidbriefs-desktop.py
-#                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# Youtube video loader and conversational AI content advisor Python script: https://github.com/alfie-ns/vidbriefs-desktop 🔴
+# ---------------------------------------------------------------------------------------------------------------------------
+
+# 🔴Vidbriefs-desktop:  https://github.com/alfie-ns/VidBriefs-Desktop
+#                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# Youtube video loader and conversational AI content advisor Python script.
 # This python script is very easy to setup and run; just follow the readme.md instructions.
 
 # ---------------------------------------------------------------------------------------------------------------------------
@@ -53,7 +55,7 @@ show_progress() {
     local steps=20 # Number of steps in the progress bar
     local delay=$(bc <<< "scale=3; $duration / $steps") # Calculate delay per step
     # loop will continue to execute as long as the process with the given PID ($pid) is still running
-    while kill -0 $pid 2>/dev/null; do # While process is NOT dead, 2nd argument redirects errors to /dev/null
+    while kill -0 $pid 2>/dev/null; do # While process is NOT dead, 2nd argument redirects errors to /dev/null(no output)
         for ((i=0; i<=steps; i++)); do # Loop through steps one-by-one
             printf "\rProcessing: [" # Print start of progress bar
             for ((j=0; j<i; j++)); do printf "#"; done # Print # for each step
@@ -71,31 +73,35 @@ process_images() {
     clear # Clear the terminal first
     print_blue "\nProcessing images..." # Print message in blue
     
-    # Check if q3b-mac.cpp is NOT found in the current directory
-    if [ ! -f "q3b-mac.cpp" ]; then
-        print_red "Error: q3b-mac.cpp not found in the current directory."
-        print_yellow "Current directory contents:"
-        ls -la # List all files in the current directory, -la for long listing(permissions, size, etc.)
-        return 1 #failure
-    fi
+    # Check if required files are present
+    for file in "q3b-mac.cpp" "q3b.cpp"; do
+        if [ ! -f "$file" ]; then # if negated found/NOT found
+            print_red "Error: $file not found in the current directory."
+            print_yellow "Current directory contents:"
+            ls -la # List all files in the current directory
+            return 1 #failure
+        fi
+    done
     
-    if check_command clang++; then # If clang++ is available(Mac OS)
-        compiler="clang++" # Set compiler to clang++
-    elif check_command g++; then # If g++ is available(Linux)
+    # Determine compiler and source file
+    if check_command clang++; then
+        compiler="clang++"
+        source_file="q3b-mac.cpp"
+    elif check_command g++; then
         compiler="g++"
+        source_file="q3b.cpp"
     else
         print_red "Error: Neither clang++ nor g++ is installed or in PATH."
         return 1
     fi
     
-    if clang++ -std=c++17 q3b-mac.cpp -o image_processor -O3 -lm; then compiler="clang++" # Mac OS
-    elif g++ -std=c++17 q3b.cpp -o image_processor -O3 -lm; then compiler="g++" # Linux
-    else
-        # Both compilers failed
-        print_red "Error: Compilation failed with both clang++ and g++."
+    # Compile the program, using previously initialised veriables
+    if ! $compiler -std=c++17 $source_file -o image_processor -O3 -lm; then
+        print_red "Error: Compilation failed with $compiler."
         return 1 #failure
     fi
     
+    print_green "Compilation successful using $compiler."
     
     # Create output directory if it doesn't exist
     mkdir -p q3-images/output_images
@@ -104,6 +110,8 @@ process_images() {
     ./image_processor q3-images/input_images q3-images/output_images &
     show_progress $! 2 & # Start process, show progress bar for 2 seconds, and run in background(&)  
     wait $! # Wait for the process to finish
+    sleep 3 
+
     
     # Check if any output was produced
     if [ -z "$(ls -A q3-images/output_images)" ]; then # If output directory is empty

@@ -1,7 +1,8 @@
 #!/bin/bash
 
-print_green() { tput setaf 2; echo -e "$1"; tput sgr0; } # tput setaf 2 == green text
 print_red() { tput setaf 1; echo -e "$1"; tput sgr0; } # tput setaf 1 == red text
+print_green() { tput setaf 2; echo -e "$1"; tput sgr0; } # tput setaf 2 == green text
+
 # -e: interpret backslash escapes - allows for more advanced text formatting(newlines etc)
 # echo the first argument ($1) in the predefined color eg: print_green 'test' where 'test' is $1
 # tput sgr0: reset all attributes (so don't affect future text)

@@ -102,6 +102,7 @@ int main(int argc, char* argv[]) {
         char inFile[256]; // path to input file
         char blurFile[256]; // path to output blur file
         char edgeFile[256]; // path to output edge file
+        
         // sizeof prevents buffer overflow, %s/%s formats path/filename, c_str() converts std::string to C-style string
         snprintf(inFile, sizeof(inFile), "%s/%s", inputDirectoryPath.c_str(), filename.c_str());
         snprintf(blurFile, sizeof(blurFile), "%s/blur_%s", outputDirectoryPath.c_str(), filename.c_str());

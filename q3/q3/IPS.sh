@@ -17,7 +17,7 @@
 # ---------------------------------------------------------------------------------------------------------------------------
 
 # 🔴Vidbriefs-desktop:  https://github.com/alfie-ns/VidBriefs-Desktop
-#                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # Youtube video loader and conversational AI content advisor Python script.
 # This python script is very easy to setup and run; just follow the readme.md instructions.
 

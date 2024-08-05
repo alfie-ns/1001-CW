@@ -163,7 +163,7 @@ int main() {
     [X] Make routine2_vec
     [X] Make copies of y and w arrays before running vectorised versions, for testing
     [X] RESULTS DO NOT MATCH.
-    [X] Make new routine2_vec
+    [X] Make NEW routine2_vec
 
     https://github.com/alfie-ns/1001-CW
 
@@ -411,7 +411,7 @@ void routine2_vec(float alpha, float beta) {
                 __m256 vec_B = _mm256_mul_ps(vec_A, x_vec);
                 // 3. C = (w[i] - beta) + B
                 __m256 vec_C = _mm256_add_ps(w_minus_beta_vec, vec_B);
-                // 4. Accumulate sum_vec to complete the formula BEFORE horizontal addition
+                // 4. complete the formula BEFORE horizontal addition
                 sum_vec = _mm256_add_ps(sum_vec, vec_C);
             }
 

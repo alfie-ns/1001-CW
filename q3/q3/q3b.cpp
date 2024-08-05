@@ -30,10 +30,6 @@ int getint(FILE* fp);
 void allocateArrays();
 void deleteArrays();
 
-void db(std::string msg) {
-    std::cout << msg << std::endl;
-}
-
 //CRITICAL POINT: images' paths - You need to change these paths
 // #define IN "/home/wave/Desktop/comp1001/code_to_start/input_images/a15.pgm"
 // #define OUT "/home/wave/Desktop/comp1001/code_to_start/output_images/blurred.pgm"

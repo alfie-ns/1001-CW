@@ -124,7 +124,7 @@ process_images() {
 }
 
 view_images() {
-    clear # Clear the terminal first
+    clear # 1. Clear the terminal first
     print_blue "\nAttempting to open output images..."
     output_dir="q3-images/output_images" # Set output directory
     

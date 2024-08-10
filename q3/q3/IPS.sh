@@ -73,7 +73,7 @@ process_images() {
     clear # Clear the terminal first
     print_blue "\nProcessing images..." # Print message in blue
     
-    # Check if required files are present
+    # for each file in the list, check if it exists in the current directory
     for file in "q3b-mac.cpp" "q3b.cpp"; do
         if [ ! -f "$file" ]; then # if negated found/NOT found
             print_red "Error: $file not found in the current directory."
@@ -125,8 +125,8 @@ process_images() {
 
 view_images() {
     clear # 1. Clear the terminal first
-    print_blue "\nAttempting to open output images..."
-    output_dir="q3-images/output_images" # Set output directory
+    print_blue "\nAttempting to open output images..." # 2. Print message in blue
+    output_dir="q3-images/output_images" # 3. Set output directory
     
     if [ ! -d "$output_dir" ]; then # If output directory does not exist
         print_red "Error: Output directory $output_dir does not exist."

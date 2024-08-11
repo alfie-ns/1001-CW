@@ -1,6 +1,6 @@
 #!/bin/bash
-#cd q3/q3/q3-images/output_images
-#rm -f *
+bash clear-output.sh
+sleep 1
 # ------------------------------
 git add .
 git commit -m 'update'

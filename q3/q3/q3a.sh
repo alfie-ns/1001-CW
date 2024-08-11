@@ -8,7 +8,7 @@ print_green() { tput setaf 2; echo -e "$1"; tput sgr0; } # tput setaf 2 == green
 # tput sgr0: reset all attributes (so don't affect future text)
 
 # Compile C++ program q3a.cpp, if successful print success message, else print error message
-if g++ -o q3 ../../q3/main_linux.cpp -lm; then print_green "q3a.cpp compiled successfully!"
+if g++ -o q3 ../../q3/q3a.cpp -lm; then print_green "q3a.cpp compiled successfully!"
 else #if compilation fails, echo error and exit with status 1: failure
     print_red "Error: q3a.cpp did not compile successfully..."
     exit 1 #failure

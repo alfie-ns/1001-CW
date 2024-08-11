@@ -33,12 +33,12 @@ fi
 : <<'END'
 
 Use g++ to compile the C++ program q3a.cpp 
-located in the q3 directory, creating a 
+located in the q3 directory; thus creating a 
 Linux-compatible executable. Include the math
 library by specifying -lm in the compilation command.
 
 I am mirroring the old q3a.sh script, only adding
-if statements and print_green and print_red
+if statements and print_green and print_red                     
 functions.
 
 END

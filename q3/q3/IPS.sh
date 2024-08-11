@@ -23,7 +23,7 @@
 
 # ---------------------------------------------------------------------------------------------------------------------------
 
-# Usage: Clone the repo to run the IPS script. Ensure .pgm images are in 'q3-images/input_images' directory.
+# Usage: Clone the repo to run the IPS script.
 # https://github.com/alfie-ns/1001-CW
 
 # Functions ------------------------------------------------------------------------------------------------------------------
@@ -159,7 +159,7 @@ remove_images() {
     rm -f image_processor # Remove the compiled program
     if [ -d "q3-images/output_images" ]; then # If output directory exists
         rm -f q3-images/output_images/* # Remove all files in output directory
-        print_green "Output images removed."
+        #print_green "remove_images function complete"
     else
         print_yellow "Output directory not empty. Nothing to remove."
     fi
@@ -225,7 +225,9 @@ while true; do # Infinite loop
             clear
             print_bold "\nExiting...\n"
             remove_images
+            sleep 1.5
             print_green "Cleaned up output images."
+            sleep 1.5 
             clear
             exit 0
             ;;

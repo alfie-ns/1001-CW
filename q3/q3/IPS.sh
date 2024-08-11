@@ -234,7 +234,7 @@ while true; do # Infinite loop
             ;;
         *) # If user input is anything else apart from 1-4
             clear
-            print_red "\nInvalid option. Please choose a number between 1 and 5."
+            print_red "\nInvalid option. Please choose a number between 1 and 4."
             ;;
     esac # End case statement
     echo # Print newline

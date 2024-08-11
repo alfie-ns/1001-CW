@@ -1,5 +1,7 @@
 #!/bin/bash
-git rm -r q3/q3/q3-images/output_images/*
+#cd q3/q3/q3-images/output_images
+#rm -f *
+# ------------------------------
 git add .
 git commit -m 'update'
 git push origin main

@@ -110,8 +110,6 @@ process_images() {
     ./image_processor q3-images/input_images q3-images/output_images &
     show_progress $! 2 & # Start process, show progress bar for 2 seconds, and run in background(&)  
     wait $! # Wait for the process to finish
-    sleep 3 
-
     
     # Check if any output was produced
     if [ -z "$(ls -A q3-images/output_images)" ]; then # If output directory is empty
@@ -223,12 +221,11 @@ while true; do # Infinite loop
                 print_red "Failed to remove images."
             fi
             ;;
-        4)  # If user input is 4 exit while clearing images
+        4)  # If user input is 4 exit: clean up output_images and exit with success
             clear
             print_bold "\nExiting...\n"
             remove_images
             print_green "Cleaned up output images."
-            sleep 3
             clear
             exit 0
             ;;

@@ -1,8 +1,7 @@
 #!/bin/bash
 cd ../run
-bash clear-output.sh
-sleep 1 # ensure deletion process complete
-# ----------------------------------------
+if ./clear.sh; then sleep 1; else echo -e "\nfailed to clear output; exiting\n"; exit 1; fi
+# ---------------------------------------------------------------------------------------------------
 cd ..
 git add .
 git commit -m 'update'

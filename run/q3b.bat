@@ -1,6 +1,6 @@
 @echo off
 cd ../q3/q3
-REM Create output_images if it doesn't already exist
+rem Create output_images if it doesn't already exist
 if not exist "q3-images\output_images" (
     mkdir "q3-images\output_images"
     if %errorlevel% neq 0 (
@@ -26,4 +26,4 @@ echo.
 powershell -command "Write-Host '../q3/q3/q3b.cpp' -NoNewline -ForegroundColor Cyan; Write-Host ' compiled and executed successfully' -ForegroundColor Green"
 
 cd ..\..
-REM back to the root directory
+rem back to the root directory

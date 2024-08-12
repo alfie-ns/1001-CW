@@ -1,11 +1,10 @@
 #include <stdio.h>
-#include <time.h>
-#include <pmmintrin.h>
 #include <chrono>
 #include <iostream>
-#include <immintrin.h>
 #include <cstring>
 #include <cmath>
+#include <algorithm>
+#include <arm_neon.h>
 
 #define M 1024*512
 #define ARITHMETIC_OPERATIONS1 3*M
@@ -23,10 +22,10 @@ void routine2(float alpha, float beta);
 void routine1_vec(float alpha, float beta);
 void routine2_vec(float alpha, float beta);
 
-alignas(64) float y[M], z[M];
-alignas(64) float A[N][N], x[N], w[N];
-alignas(64) float y_copy[M];
-alignas(64) float w_copy[N];
+alignas(16) float y[M], z[M];
+alignas(16) float A[N][N], x[N], w[N];
+alignas(16) float y_copy[M];
+alignas(16) float w_copy[N];
 
 unsigned short int equal(float a, float b);
 
@@ -157,17 +156,17 @@ void routine1(float alpha, float beta) {
 
 void routine1_vec(float alpha, float beta) {
     unsigned int i;
-    __m256 alpha_vec = _mm256_set1_ps(alpha);
-    __m256 beta_vec = _mm256_set1_ps(beta);
+    float32x4_t alpha_vec = vdupq_n_f32(alpha);
+    float32x4_t beta_vec = vdupq_n_f32(beta);
 
-    for (i = 0; i < M; i += 8) {
-        __m256 y_vec = _mm256_load_ps(&y[i]);
-        __m256 z_vec = _mm256_load_ps(&z[i]);
-        __m256 result_vec = _mm256_add_ps(_mm256_mul_ps(alpha_vec, y_vec),_mm256_mul_ps(beta_vec, z_vec));
-        _mm256_store_ps(&y[i], result_vec);
+    for (i = 0; i < M; i += 4) { // process 4 elements at a time
+        float32x4_t y_vec = vld1q_f32(&y[i]); // load 4 elements from y (32-bit vector)
+        float32x4_t z_vec = vld1q_f32(&z[i]); // load 4 elements from z (32-bit vector)
+        float32x4_t result_vec = vmlaq_f32(vmulq_f32(alpha_vec, y_vec), beta_vec, z_vec);
+        vst1q_f32(&y[i], result_vec);
     }
 
-    for (; i < M; i++) {
+    for (; i < M; i++) { // catch remaining elements
         y[i] = (alpha * y[i]) + (beta * z[i]);
     }
 }
@@ -181,36 +180,29 @@ void routine2(float alpha, float beta) {
 
 void routine2_vec(float alpha, float beta) {
     unsigned int i = 0, j = 0;
-    __m256 alpha_vec = _mm256_set1_ps(alpha);
-    __m256 beta_vec = _mm256_set1_ps(beta);
+    float32x4_t alpha_vec = vdupq_n_f32(alpha);
+    float32x4_t beta_vec = vdupq_n_f32(beta);
 
     for (i = 0; i < N; i++) {
-        __m256 sum_vec = _mm256_setzero_ps();
-        __m256 w_vec = _mm256_set1_ps(w[i]);
-        __m256 w_minus_beta_vec = _mm256_sub_ps(w_vec, beta_vec);
+        float32x4_t sum_vec = vdupq_n_f32(0.0f);
+        float32x4_t w_vec = vdupq_n_f32(w[i]);
+        float32x4_t w_minus_beta_vec = vsubq_f32(w_vec, beta_vec);
 
-        for (j = 0; j < N - 7; j += 8) {
-            __m256 a_vec = _mm256_load_ps(&A[i][j]);
-            __m256 x_vec = _mm256_load_ps(&x[j]);
-            __m256 vec_A = _mm256_mul_ps(alpha_vec, a_vec);
-            __m256 vec_B = _mm256_mul_ps(vec_A, x_vec);
-            __m256 vec_C = _mm256_add_ps(w_minus_beta_vec, vec_B);
-            sum_vec = _mm256_add_ps(sum_vec, vec_C);
+        for (j = 0; j < N - 3; j += 4) {
+            float32x4_t a_vec = vld1q_f32(&A[i][j]);
+            float32x4_t x_vec = vld1q_f32(&x[j]);
+            float32x4_t vec_A = vmulq_f32(alpha_vec, a_vec);
+            float32x4_t vec_B = vmulq_f32(vec_A, x_vec);
+            sum_vec = vaddq_f32(sum_vec, vec_B);
         }
 
-        float sum_remainder = 0.0f;
+        float sum = vgetq_lane_f32(sum_vec, 0) + vgetq_lane_f32(sum_vec, 1) +
+                    vgetq_lane_f32(sum_vec, 2) + vgetq_lane_f32(sum_vec, 3);
+
         for (; j < N; j++) {
-            sum_remainder += (w[i] - beta) + (alpha * A[i][j] * x[j]);
+            sum += alpha * A[i][j] * x[j];
         }
 
-        __m128 sum_lo = _mm256_castps256_ps128(sum_vec);
-        __m128 sum_hi = _mm256_extractf128_ps(sum_vec, 1);
-        __m128 sum_128 = _mm_add_ps(sum_lo, sum_hi);
-        sum_128 = _mm_hadd_ps(sum_128, sum_128);
-        sum_128 = _mm_hadd_ps(sum_128, sum_128);
-
-        float sum = _mm_cvtss_f32(sum_128);
-        sum += sum_remainder;
-        w[i] = sum;
+        w[i] = (w[i] - beta) + sum;
     }
 }

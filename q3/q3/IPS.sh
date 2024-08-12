@@ -55,7 +55,7 @@ show_progress() {
     local steps=20 # Number of steps in the progress bar
     local delay=$(bc <<< "scale=3; $duration / $steps") # Calculate delay per step
     # loop will continue to execute as long as the process with the given PID ($pid) is still running
-    while kill -0 $pid 2>/dev/null; do # While process is NOT dead, 2nd argument redirects errors to /dev/null(no output)
+    while kill -0 $pid 2>/dev/null; do # While process is NOT dead, 2nd argument redirects errors to /dev/null(no output)c
         for ((i=0; i<=steps; i++)); do # Loop through steps one-by-one
             printf "\rProcessing: [" # Print start of progress bar
             for ((j=0; j<i; j++)); do printf "#"; done # Print # for each step
@@ -187,7 +187,7 @@ show_menu() {
 #}
 
 print_ascii() {
-    cat << "EOF"
+cat << "EOF"
          _  __ _                     
    __ _ | |/ _(_) ___       _ __  ___
   / _` || | |_| |/ _ \_____| '_ \/ __|

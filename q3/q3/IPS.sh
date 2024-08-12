@@ -225,7 +225,6 @@ while true; do # Infinite loop
             clear
             print_bold "\nExiting...\n"
             remove_images
-            sleep 1.5
             print_green "Cleaned up output images."
             sleep 1.5 
             clear

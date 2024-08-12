@@ -1,7 +1,9 @@
 #!/bin/bash
+cd ../run
 bash clear-output.sh
-sleep 1
-# ------------------------------
+sleep 1 # ensure deletion process complete
+# ----------------------------------------
+cd ..
 git add .
 git commit -m 'update'
 git push origin main

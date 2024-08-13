@@ -14,7 +14,7 @@
 #define ARITHMETIC_OPERATIONS2 4*N*N
 #define TIMES2 1
 
-#define EPSILON 0.0001
+#define EPSILON 0.0001 // 1e-4
 
 void initialize();
 void routine1(float alpha, float beta);
@@ -40,7 +40,7 @@ int main() {
 
     initialize();
 
-    printf("\n-----------------NON-OPTIMISED------------------------------\n");
+    printf("\n-----------------NON-OPTIMISED---------------------------\n");
 
     printf("\nRoutine1:");
     start_time = std::chrono::high_resolution_clock::now();
@@ -117,6 +117,7 @@ int main() {
     if (arraysAreEqual) {
         printf("Routine2 <-> Routine2_vec: Results match.\n");
     }
+    printf("\n");
 
     return 0;
 }
@@ -158,8 +159,10 @@ void routine1(float alpha, float beta) {
 
 void routine1_vec(float alpha, float beta) {
     unsigned int i;
-    float32x4_t alpha_vec = vdupq_n_f32(alpha);
-    float32x4_t beta_vec = vdupq_n_f32(beta);
+    float32x4_t alpha_vec = vdupq_n_f32(alpha); // 32-bit vector with 4 copies of alpha and beta
+    float32x4_t beta_vec = vdupq_n_f32(beta); // essentially broadcasts the alpha and beta
+                                              // value across all four lanes of the SIMD vector.
+    
 
     for (i = 0; i < M; i += 4) { // process 4 elements at a time
         float32x4_t y_vec = vld1q_f32(&y[i]); // load 4 elements from y (32-bit vector)

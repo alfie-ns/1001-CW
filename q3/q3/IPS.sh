@@ -16,7 +16,7 @@
 
 # ---------------------------------------------------------------------------------------------------------------------------
 
-# 🔴Vidbriefs-desktop:  https://github.com/alfie-ns/VidBriefs-Desktop
+# 🔴VidBriefs-Desktop:  https://github.com/alfie-ns/VidBriefs-Desktop
 #                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # Youtube video loader and conversational AI content advisor Python script.
 # This python script is very easy to setup and run; just follow the readme.md instructions.
@@ -38,10 +38,12 @@ print_bold() { tput bold; printf "%b\n" "$1"; tput sgr0; } # Emphasis
 # tput sgr0; == reset all attributes, so text is not bold anymore after
 # tput setaf {n}; == colour codes
 
+
+
 # Error checking function
 check_command() {
     # Check if the command provided as the first argument ($1) is NOT available in system PATH
-    if ! command -v $1 &> /dev/null; then # &> redirects both stdout and stderr to the null, discarding output if this fails
+    if ! command -v $1 &> /dev/null; then # &> redirects both stdout and stderr to the null, suppressing output
         print_red "Error: $1 is not installed or not in PATH." # Print error message with first argument
         return 1 #failure
     fi #end if also if command succeeds
@@ -103,7 +105,7 @@ process_images() {
     
     print_green "Compilation successful using $compiler."
     
-    # Create output directory if it doesn't exist
+    # Create output directory if it doesn't exist, thus suppressing error messages if already exists
     mkdir -p q3-images/output_images
     
     # Run the image processor
@@ -156,7 +158,7 @@ remove_images() {
     clear # Clear the terminal first
     print_yellow "Removing output images..."
     
-    rm -f image_processor # Remove the compiled program
+    rm -f image_processor # Force remove the compiled program
     if [ -d "q3-images/output_images" ]; then # If output directory exists
         rm -f q3-images/output_images/* # Remove all files in output directory
         #print_green "remove_images function complete"

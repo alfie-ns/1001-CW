@@ -1,9 +1,10 @@
 @echo off
 cd ../q3/q3
-rem Create output_images if it doesn't already exist
+rem create output_images if it doesn't already exist
 if not exist "q3-images\output_images" (
     mkdir "q3-images\output_images"
-    if %errorlevel% neq 0 (
+    rem if errorlevel is not 0, then the directory was not created
+    if %errorlevel% neq 0 ( 
         echo Failed to create output directory
         exit /b %errorlevel%
     )

@@ -1,13 +1,18 @@
 #!/bin/bash
 
-echo -e '\nRunning q1...\n'
-if bash q1.sh; then sleep 3; fi
 
-echo -e '\nRunning q2...\n'
-if bash q2.sh; then sleep 4; fi
+if bash q1.sh; then echo -e '\nRunning q1...\n'; fi
+if bash q2.sh; then echo -e '\nRunning q2...\n'; fi
+if bash q3a.sh; then echo -e '\nRunning q3a...\n'; fi
+# ---------------------------------------------------
+read -p "Do you want to proceed to q3b? This will clear the screen (y/n): " answer
+if [[ $answer == "y" ]]; then bash q3b.sh; fi
 
-echo -e '\nRunning q3a...\n'
-if bash q3a.sh; then sleep 3; fi
+: <<'END'
 
-echo -e '\nRunning q3b...\n'
-if bash q3b.sh; then echo -e '\nall questions ran succesfully\n'; fi
+If all the listed scripts run successfully,
+print respective success messages. -p flag is used
+to prompt the user for input. 'answer' variable is
+user input.
+
+END

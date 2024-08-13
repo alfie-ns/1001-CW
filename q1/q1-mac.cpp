@@ -96,7 +96,7 @@ int main() {
 
     arraysAreEqual = true;
     for (int i = 0; i < M; i++) {
-        if (!equal(y_copy[i], y[i])) {
+        if (!equal(y_copy[i], y[i])) { // if equal function from the lab session fails
             printf("Routine1: Results do not match!\n");
             arraysAreEqual = false;
             break;
@@ -107,7 +107,7 @@ int main() {
     }
 
     arraysAreEqual = true;
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++) { // loop through all instances of the w[i] iteration
         if (!equal(w_copy[i], w[i])) {
             printf("Routine2_vec: Results do not match!\n");
             arraysAreEqual = false;
@@ -147,6 +147,8 @@ unsigned short int equal(float a, float b) {
     else
         return 1;
 }
+
+// 32-bit vectorisation
 
 void routine1(float alpha, float beta) {
     unsigned int i;

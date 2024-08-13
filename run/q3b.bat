@@ -25,5 +25,5 @@ if %errorlevel% neq 0 (
 echo.
 powershell -command "Write-Host '../q3/q3/q3b.cpp' -NoNewline -ForegroundColor Cyan; Write-Host ' compiled and executed successfully' -ForegroundColor Green"
 
-cd ..\..
-rem back to the root directory
+cd ..\..\..
+rem back to the 'run' directory

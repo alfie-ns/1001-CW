@@ -28,7 +28,7 @@ else
     exit 1 #failure
 fi
 
-# Compile bash script with: chmod +x q3a.sh
+# make bash script executable with: chmod +x q3a.sh
 
 : <<'END'
 

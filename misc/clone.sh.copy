@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if git clone https://github.com/alfie-ns/1001-CW; then
+    echo "Clone successful"
+else
+    echo "Clone failed"
+fi

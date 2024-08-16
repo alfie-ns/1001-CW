@@ -105,7 +105,7 @@ process_images() {
     
     print_green "Compilation successful using $compiler."
     
-    # Create output directory if it doesn't exist, thus suppressing error messages if already exists
+    # Create output directory if it doesn't exist suppress error output
     mkdir -p q3-images/output_images
     
     # Run the image processor

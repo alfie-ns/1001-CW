@@ -1,7 +1,7 @@
 #!/bin/bash
 cd ..
 if find . -iname ".ds_store" -print0 | xargs -0 git rm -f --ignore-unmatch; then
-    echo -e "\nremoved all DS_Store files\n"
+    echo -e "\nremoved all DS_Store files"
 fi
 : <<'END'
 

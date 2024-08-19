@@ -33,8 +33,10 @@ Use clang++ to compile the C++ program q3a.cpp
 located in the q3 directory; thus creating a 
 macOS-compatible executable.
 
-I am mirroring the old q3a.sh script, only adding
-if statements and print_green and print_red                     
-functions, and adapting for macOS.
+- --std=c++11 specifies the C++ standard to use.
+- -o q3 specifies the output file name.
+- q3a-mac.cpp is the source file to compile.
+- If compilation is successful, print a success message., 
+  otherwise print an error message and exit with status 1.
 
 END

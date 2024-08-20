@@ -5,4 +5,4 @@ if clang++ -std=c++11 -O3 -march=armv8-a+simd q1-mac.cpp -o q1-mac-executable; t
 fi
 
 if ./q1-mac-executable; then rm -f q1-mac-executable; fi
-# if executable runs successfully, force remove it
+# if executable runs successfully force remove it

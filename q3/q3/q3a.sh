@@ -4,12 +4,12 @@ print_red() { tput setaf 1; echo -e "$1"; tput sgr0; }
 print_green() { tput setaf 2; echo -e "$1"; tput sgr0; }
 print_amber() { tput setaf 3; echo -e "$1"; tput sgr0; }
 
-compile_success=false
+compile_success=false # flag to check if compilation was successful
 
 if [[ "$OSTYPE" == "darwin"* ]]; then # if macOS
-    if clang++ -std=c++11 -o q3_mac q3a-mac.cpp; then # if compilation in macOS succeeded
+    if clang++ -std=c++11 -o q3_mac q3a-mac.cpp; then # run mac-compatible C++ program
         print_green "q3a-mac.cpp compiled successfully for macOS!"
-        compile_success=true
+        compile_success=true 
         executable="./q3_mac"
     else
         print_amber "Warning: q3a-mac.cpp did not compile successfully for macOS..."
@@ -20,7 +20,8 @@ else
         compile_success=true
         executable="./q3"
     else
-        print_amber "Warning: q3a.cpp did not compile successfully for Linux..."
+        print_red "Error: Could not compile q3a"
+        exit 1 #failure
     fi 
 fi
 
@@ -30,17 +31,19 @@ if [ "$compile_success" = false ]; then
 fi
 
 input_dir="q3-images/input_images"
-images=()
-while IFS= read -r file; do
+images=() # init empty array to store selected PGM files
+
+# Select 3 random PGM files
+while IFS= read -r file; do # use IFS to essentially make sure to ensure all critical data is processed
     images+=("$file")
-done < <(find "$input_dir" -name "*.pgm" | sort -R | head -n 3)
+done < <(find "$input_dir" -name "*.pgm" | sort -R | head -n 3) # sort randomly and select 3
 
 if [ ${#images[@]} -lt 3 ]; then
-    print_red "Error: Not enough .pgm files found in $input_dir"
+    print_red "Error: Not enough PGM files found in $input_dir"
     exit 1
 fi
 
-for input_image in "${images[@]}"; do
+for input_image in "${images[@]}"; do # iterate through .pgm files
     base_name=$(basename "$input_image" .pgm)
     blur_image="q3-images/output_images/${base_name}_blurred.pgm"
     edge_image="q3-images/output_images/${base_name}_edge_detected.pgm"
@@ -51,7 +54,7 @@ for input_image in "${images[@]}"; do
             print_green "q3a.sh executed successfully for $input_image!"
         else
             print_red "Error: q3a.sh did not execute successfully for $input_image..."
-            print_amber "Skipping this image and continuing with the next..."
+            print_amber "Skipping this image; continuing with the next..."
         fi
     else
         print_red "Error: Executable not found. Compilation may have failed."
@@ -64,12 +67,16 @@ exit 0
 # make bash script executable with: chmod +x q3a.sh
 
 : <<'END'
-Use g++ to compile the C++ program q3a.cpp 
-located in the q3 directory; thus creating a 
-Linux-compatible executable. Include the math
-library by specifying -lm in the compilation command.
+q3a.sh compiles the C++ program q3a.cpp or q3a-mac.cpp depending on the operating system 
+(Linux or macOS, respectively). It uses g++ for Linux, including the math library by specifying 
+-lm, and clang++ for macOS development.
 
-I am mirroring the old q3a.sh script, only adding
-if statements and print_green and print_red                     
-functions.
-ENDs
+The script then selects 3 random PGM files from the 'q3-images/input_images' directory.
+For each selected image, it processes the image using the compiled executable and 
+generates two output images: a blurred version and an edge-detected version. These 
+output images are saved in the 'q3-images/output_images' directory with the appropriate suffixes.
+
+The script also includes error handling, printing messages in different colours 
+(green for success, amber for warnings, and red for errors) using the functions:
+print_green, print_amber, and print_red.
+END

@@ -12,7 +12,7 @@ Replace "." with a specific directory path to search in a different location.
 -iname ".ds_store":
 This option specifies the name of the file to search for. 
 The `-iname` flag performs a case-insensitive search for the file name ".DS_Store". 
-If you want a case-sensitive search, use `-name` instead.
+For a case-sensitive search, use `-name` instead.
 
 -print0:
 This option tells `find` to print the file names followed by a null character (\0). 

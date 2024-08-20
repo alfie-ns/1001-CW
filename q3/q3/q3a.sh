@@ -15,7 +15,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then # if macOS
         print_amber "Warning: q3a-mac.cpp did not compile successfully for macOS..."
     fi 
 else
-    if g++ -std=c++11 -o q3 q3a.cpp -lm; then
+    if g++ -std=c++11 -o q3 q3a.cpp -lm; then # if ran on g++-compatible c++ program
         print_green "q3a.cpp compiled successfully for Linux!"
         compile_success=true
         executable="./q3"
@@ -25,7 +25,7 @@ else
     fi 
 fi
 
-if [ "$compile_success" = false ]; then
+if [ "$compile_success" = false ]; then # if compile_success was never set to true
     print_red "Error: Failed to compile the program."
     exit 1
 fi
@@ -33,24 +33,25 @@ fi
 input_dir="q3-images/input_images"
 images=() # init empty array to store selected PGM files
 
-# Select 3 random PGM files
-while IFS= read -r file; do # use IFS to essentially make sure to ensure all critical data is processed
+# While proccessing 3 random PGM files, add them to the images array
+while IFS= read -r file; do # use IFS to essentially make sure to ensure all critical data is processed; read all as one line
     images+=("$file")
-done < <(find "$input_dir" -name "*.pgm" | sort -R | head -n 3) # sort randomly and select 3
+done < <(find "$input_dir" -name "*.pgm" | sort -R | head -n 3) # sort randomly and find 3 .pgm files
 
-if [ ${#images[@]} -lt 3 ]; then
+if [ ${#images[@]} -lt 3 ]; then # Error check: if less than 3 PGM files found
     print_red "Error: Not enough PGM files found in $input_dir"
     exit 1
 fi
 
 for input_image in "${images[@]}"; do # iterate through .pgm files
+    # Define output file paths to create blurred and edge-detected images
     base_name=$(basename "$input_image" .pgm)
     blur_image="q3-images/output_images/${base_name}_blurred.pgm"
     edge_image="q3-images/output_images/${base_name}_edge_detected.pgm"
 
-    if [ -f "$executable" ]; then
+    if [ -f "$executable" ]; then # if executable exists, begin processing
         print_amber "Processing $input_image..."
-        if $executable "$input_image" "$blur_image" "$edge_image"; then
+        if $executable "$input_image" "$blur_image" "$edge_image"; then # run executable with input image and output file paths
             print_green "q3a.sh executed successfully for $input_image!"
         else
             print_red "Error: q3a.sh did not execute successfully for $input_image..."

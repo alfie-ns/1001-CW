@@ -198,7 +198,7 @@ cat << "EOF"
   
 EOF
 }
-
+read -rsn1 input
 # Main -----------------------------------------------------------------------------------------------------------------------
 clear # Clear the terminal first
 print_ascii # Print ASCII art
@@ -206,7 +206,7 @@ print_bold "C++ Image Processing Script" # Print bold title
 while true; do # Infinite loop
     echo # Print newline
     show_menu # Show menu
-    read -p "$(print_bold "Enter your choice (1-4): ")" choice # Read user input
+    read -rsn1 "$(print_bold "Enter your choice (1-4): ")" choice # Read user input
     case $choice in # Case statement for user input
         1) # If user input is 1 process images
             if ! process_images; then

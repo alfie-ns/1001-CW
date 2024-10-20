@@ -1,5 +1,5 @@
 #!/bin/bash
-
+cd run
 bash q1.sh
 bash q2.sh
 bash q3a.sh
